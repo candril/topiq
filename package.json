@@ -1,0 +1,39 @@
+{
+  "name": "topiq",
+  "version": "0.1.0",
+  "description": "Peek, filter, replay. Kafka without leaving the terminal.",
+  "license": "MIT",
+  "keywords": ["kafka", "avro", "terminal", "tui", "cli", "bun"],
+  "module": "src/index.tsx",
+  "type": "module",
+  "bin": {
+    "topiq": "./dist/topiq"
+  },
+  "scripts": {
+    "dev": "bun run src/index.tsx",
+    "build": "bun run scripts/build.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint src spike scripts",
+    "lint:fix": "oxlint --fix src spike scripts",
+    "fmt": "oxfmt src spike scripts",
+    "fmt:check": "oxfmt --check src spike scripts"
+  },
+  "dependencies": {
+    "@opentui/core": "0.1.87",
+    "@opentui/react": "0.1.87",
+    "avsc": "^5.7.9",
+    "kafkajs": "^2.2.4",
+    "kafkajs-snappy": "^1.1.0",
+    "react": "19"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/react": "^18.2.0",
+    "oxfmt": "^0.42.0",
+    "oxlint": "^1.57.0",
+    "undici-types": "^8.7.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

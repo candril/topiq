@@ -1,0 +1,10 @@
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Real config may reference secrets and local cluster identities — example only is tracked.
+config.toml
+.env
+
+# A cluster CA names the project that issued it. Keep it beside the real config.
+*.pem

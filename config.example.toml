@@ -1,0 +1,59 @@
+# topiq cluster profiles (spec 002).
+#
+# Copy to ~/.config/topiq/config.toml — or point TOPIQ_CONFIG at another path.
+# The real config stays local-only: it names a password *command*, never a password.
+
+# One [clusters.<name>] table per profile. The name doubles as the CLI argument
+# (`topiq orders-test`).
+[clusters.orders-test]
+
+# Bootstrap brokers as "host:port" strings. Required.
+brokers = ["kafka-test.example.aivencloud.com:24748"]
+
+# Schema registry URL, http(s). Required. Aiven serves it on the broker host,
+# different port; it reuses the SASL credentials below as basic auth (spec 005).
+registry = "https://kafka-test.example.aivencloud.com:24740"
+
+# SASL identity — one identity per profile, shared by brokers and registry.
+# mechanism: "scram-sha-256" or "scram-sha-512" (SASL_SSL + SCRAM, what Aiven and
+# most managed clusters use). Two clusters in the same org routinely disagree on
+# which, so it is per profile — check rather than guess.
+sasl = { mechanism = "scram-sha-256", username = "svc-orders" }
+
+# Shell command whose trimmed stdout is the SASL password, run on demand.
+# The secret is never stored, logged, or written to disk (nfr/003).
+password_cmd = "az keyvault secret show --vault-name my-vault-test --name kafka-orders-password --query value -o tsv"
+
+# Path to a PEM CA bundle; a leading "~" expands. Optional in general, required
+# in practice for Aiven clusters: they chain to a self-signed project CA that no
+# default trust store accepts (spec 003). Applies to brokers AND registry.
+ca_cert = "~/.config/topiq/aiven-orders-ca.pem"
+
+# Optional topic namespace: filters the topic list and prefixes produced topic
+# names (spec 006). Test clusters commonly mirror prod topics under "test-".
+topic_prefix = "test"
+
+# Logical cluster family + environment (spec 023) — set both or neither.
+# Profiles sharing a group are environments of one cluster: the picker groups
+# them, env-switch jumps between them, and the env shows wherever the cluster is.
+group = "orders"
+env = "test"
+
+# Prod-ness is declared, never guessed from hostnames (spec 023). Defaults to
+# env == "prod"; set explicitly when your prod env has another name.
+# prod = false
+
+# Write gate (spec 019): produce and offset writes stay disabled unless true.
+# Defaults to false.
+allow_write = false
+
+# Prod sibling of the profile above (same group, other env).
+# [clusters.orders-prod]
+# brokers = ["kafka-prod.example.aivencloud.com:24748"]
+# registry = "https://kafka-prod.example.aivencloud.com:24740"
+# sasl = { mechanism = "scram-sha-256", username = "svc-orders" }
+# password_cmd = "az keyvault secret show --vault-name my-vault-prod --name kafka-orders-password --query value -o tsv"
+# ca_cert = "~/.config/topiq/aiven-orders-ca.pem"
+# group = "orders"
+# env = "prod"
+# allow_write = false

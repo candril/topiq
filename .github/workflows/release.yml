@@ -1,0 +1,106 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    # Each target builds on a runner of its own platform rather than cross-compiling:
+    # the binary that ships is the one that was exercised (spec 026).
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            target_os: linux
+            target_arch: x64
+          - os: ubuntu-24.04-arm
+            target_os: linux
+            target_arch: arm64
+          - os: macos-latest
+            target_os: darwin
+            target_arch: arm64
+          - os: macos-15-intel
+            target_os: darwin
+            target_arch: x64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build binary
+        run: bun scripts/build.ts "dist/topiq-${{ matrix.target_os }}-${{ matrix.target_arch }}"
+
+      - name: Binary reports the tag
+        run: |
+          binary="dist/topiq-${{ matrix.target_os }}-${{ matrix.target_arch }}"
+          version=$("$binary" --version)
+          echo "$binary → $version"
+          test "$version" = "${GITHUB_REF_NAME#v}" || {
+            echo "::error::binary reports '$version', tag is '${GITHUB_REF_NAME#v}'"
+            exit 1
+          }
+
+      - name: Compress
+        run: gzip "dist/topiq-${{ matrix.target_os }}-${{ matrix.target_arch }}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: topiq-${{ matrix.target_os }}-${{ matrix.target_arch }}
+          path: dist/*.gz
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Generate checksums
+        run: |
+          cd artifacts
+          sha256sum *.gz > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Extract release notes
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          # Stops at the next section *and* at the link-reference block, which starts with
+          # "[x]: https://…" at column 0 and would otherwise trail into the notes.
+          awk -v ver="$version" '
+            /^## \[/ {
+              if (found) exit
+              if (index($0, "[" ver "]")) found = 1
+              next
+            }
+            found && /^\[[^]]+\]: / { exit }
+            found { print }
+          ' CHANGELOG.md | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}' > release_notes.md
+          if [ ! -s release_notes.md ]; then
+            echo "::warning::CHANGELOG.md has no [$version] section — release notes are empty"
+          fi
+          cat release_notes.md
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          body_path: release_notes.md
+          files: |
+            artifacts/*.gz
+            artifacts/SHA256SUMS
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
