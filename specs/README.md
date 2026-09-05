@@ -70,6 +70,8 @@ lifecycle, prioritisation, Open Questions, and cross-linking.
 | 024 | [Table Column Navigation](./024-table-column-navigation.md) | In Progress | Column cursor (`h`/`l`), sort on the selected column, hide/display modes, filter-by-cell |
 | 025 | [Loading Indicators](./025-loading-indicators.md) | In Progress | Full-pane spinner + rotating flavour for connect and topic list; inline spinner only for a message window |
 | 026 | [Release & Distribution](./026-release-and-distribution.md) | In Progress | `v*` tag → per-platform binaries + `SHA256SUMS` → GitHub Release; `curl \| bash` installer; brew tap and flake on top |
+| 027 | [Demo Mode](./027-demo-mode.md) | In Progress | `topiq --demo`: an offline seeded cluster behind the seam, writes enabled; two profiles (test writable, prod refusing) |
+| 028 | [Docs Screenshots, Demo Gif & Site](./028-docs-screenshots-and-gif.md) | Draft | lane's tmux + Pillow pipeline over `--demo`; Astro/Starlight site on Pages |
 
 ## NFR Specs
 
@@ -176,6 +178,10 @@ lifecycle, prioritisation, Open Questions, and cross-linking.
   `SHA256SUMS`, and `scripts/install.sh` fetches and verifies one. Unexercised until the
   first tag is actually pushed: no release has been cut, so the installer's happy path is
   reasoned about, not observed. P2 (Homebrew tap, flake) not started.
+- **Demo** ([027](./027-demo-mode.md)): P1 + P2 built — `topiq --demo` opens a seeded in-memory
+  cluster behind the seam (`src/demo/`), two profiles, writes enabled on `demo-test`, live
+  arrivals while following, pinned by `TOPIQ_DEMO_EPOCH`. Verified by 24 unit tests and a
+  tmux-driven session; P3 (no-config fallback, faults on demand) not started.
 - **Draft**: everything else.
 - **Next**: a live TUI session against the test cluster with `allow_write = true` — the only
   thing that can turn "built" into "verified" for milestones 4 and 5. Then

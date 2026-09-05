@@ -382,6 +382,9 @@ function Header({ state, profile }: { state: AppState; profile: ClusterProfile |
       {envLabel && profile && (
         <text fg={isProd(profile) ? theme.warning : theme.textDim}>{envLabel}</text>
       )}
+      {/* Always on, never transient: a reader of a screenshot, or a user who forgot which
+          mode they started in, must not mistake this for a real cluster (spec 027). */}
+      {profile?.demo && <text fg={theme.secondary}>demo · nothing here is real</text>}
       {/* The group view describes a topic without opening it, so the topic slot names the
           topic being described either way (spec 017). */}
       <text fg={topic ? theme.text : theme.textDim}>{topic ?? "no topic"}</text>

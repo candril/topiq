@@ -17,6 +17,10 @@ export interface ClusterProfile {
   /** Declared prod-ness — never guessed from hostnames (spec 023). Read via isProd. */
   prod?: boolean
   allowWrite: boolean
+  /** Backed by the in-memory demo cluster, not a broker (spec 027). Set only by
+   *  `src/demo/profiles.ts`: it is deliberately not a TOML key, so no real config can name
+   *  itself into demo mode — `parseProfile` rejects `demo = …` as unknown. */
+  demo?: true
 }
 
 /** Central prod check so `prod = true` and `env = "prod"` stay interchangeable (spec 023). */

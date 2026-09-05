@@ -59,7 +59,7 @@ account ([nfr/003](./nfr/003-security-and-credentials.md)).
 
 ### P3 — Nice to Have
 
-- A docs site (Astro/Starlight on GitHub Pages), as monq has.
+- ~~A docs site (Astro/Starlight on GitHub Pages), as monq has.~~ Moved to [028](./028-docs-screenshots-and-gif.md), which owns the site and the image pipeline.
 - Prerelease handling: a tag containing `-` marks the GitHub Release as a prerelease.
 - Windows. OpenTUI's terminal assumptions are unverified there; nothing about the release
   shape forbids it once someone checks.

@@ -25,6 +25,17 @@ curl -fsSL https://raw.githubusercontent.com/candril/topiq/main/scripts/install.
 Installs the latest release into `/usr/local/bin`, verifying the SHA256 first. Override
 with `TOPIQ_INSTALL_DIR=~/.local/bin` or pin with `TOPIQ_VERSION=0.1.0`.
 
+Then, before configuring anything:
+
+```sh
+topiq --demo
+```
+
+An offline demo cluster — a fictional shop's order topics, seeded consumer groups, real
+Avro behind real schema ids. No config, no broker. **Writes work**: replay a message and
+watch it land in the tail. `demo-prod` is the same cluster with `allow_write = false`, so
+the guardrails are demonstrable too.
+
 Or grab a binary from [Releases](https://github.com/candril/topiq/releases) —
 `topiq-<os>-<arch>.gz`, checksums in `SHA256SUMS`.
 

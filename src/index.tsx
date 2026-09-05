@@ -7,6 +7,10 @@ import type { ClusterSession } from "@/clusterSession.ts"
 import { loadConfig } from "@/config/load.ts"
 import type { ClusterProfile } from "@/config/schema.ts"
 import { fetchSecret } from "@/config/secret.ts"
+import { createDemoClient } from "@/demo/client.ts"
+import { DEMO_PROFILES, DEMO_TEST, demoScale } from "@/demo/profiles.ts"
+import { createDemoRegistry } from "@/demo/registry.ts"
+import { demoEpoch, seedCluster } from "@/demo/seed.ts"
 import { createKafkaClient } from "@/kafka/client.ts"
 import type { KafkaClient } from "@/kafka/types.ts"
 import { createRegistry } from "@/schema/registry.ts"
@@ -16,11 +20,13 @@ import { version } from "@/version.ts"
 const USAGE = `topiq — peek, filter, replay. Kafka without leaving the terminal.
 
 Usage: topiq [cluster] [topic]
+       topiq --demo [cluster] [topic]
 
   cluster   profile name from ~/.config/topiq/config.toml
   topic     topic to open on start
 
 Options:
+  --demo         an offline demo cluster — no config, no broker; writes stay in memory
   -h, --help     show this help
   -v, --version  print the version`
 
@@ -33,12 +39,13 @@ if (args.includes("--help") || args.includes("-h")) {
   console.log(USAGE)
   process.exit(0)
 }
-const flags = args.filter((a) => a.startsWith("-"))
+const demo = args.includes("--demo")
+const flags = args.filter((a) => a.startsWith("-") && a !== "--demo")
 if (flags.length > 0) {
   console.error(`topiq: unknown option ${flags[0]}\n\n${USAGE}`)
   process.exit(1)
 }
-const [clusterArg, topicArg] = args
+const [clusterArg, topicArg] = args.filter((a) => a !== "--demo")
 
 // The one place a transport is chosen (spec 003): below here everything sees only the
 // KafkaClient seam. Constructing it opens no connection yet. password_cmd runs exactly
@@ -50,6 +57,14 @@ const [clusterArg, topicArg] = args
 const openClients = new Set<KafkaClient>()
 
 async function connectCluster(profile: ClusterProfile): Promise<ClusterSession> {
+  if (profile.demo) {
+    // Seeded per connection, not once: a demo-prod opened for a cross-cluster copy must
+    // not share a log — or a registry, whose ids are local (spec 016) — with demo-test.
+    const seed = seedCluster({ epoch: demoEpoch(), scale: demoScale(profile) })
+    const client = createDemoClient(seed)
+    openClients.add(client)
+    return { profile, client, registry: createDemoRegistry(seed) }
+  }
   const password = await fetchSecret(profile.passwordCmd)
   const client = createKafkaClient(profile, password)
   const registry = createRegistry({
@@ -75,6 +90,20 @@ interface Startup {
 
 async function startup(): Promise<Startup> {
   let profiles: ClusterProfile[]
+  if (demo) {
+    // The config is not even read: demo mode must work on a machine that has none
+    // (spec 027), and a broken one must not stop the demo from opening.
+    profiles = DEMO_PROFILES
+    const wanted = clusterArg ?? DEMO_TEST
+    const profile = profiles.find((p) => p.name === wanted)
+    if (!profile) {
+      console.error(
+        `topiq: no demo cluster "${wanted}" — try ${profiles.map((p) => p.name).join(" or ")}`,
+      )
+      process.exit(1)
+    }
+    return { profiles, autoConnect: profile, topic: topicArg ?? null }
+  }
   try {
     profiles = await loadConfig()
   } catch (err) {
