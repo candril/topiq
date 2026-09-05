@@ -19,11 +19,18 @@ export const TAIL_QUEUE_CAP = WINDOW_CAP
 
 export interface Appended {
   rows: DecodedMessage[]
-  /** Rows evicted from the front by this append — cumulative counting is the caller's. */
+  /** Rows evicted by this append — cumulative counting is the caller's. */
   dropped: number
 }
 
-/** Append arrivals, evicting oldest-first at the cap. */
+/**
+ * Merge arrivals into the buffer, evicting oldest-first at the cap.
+ *
+ * The buffer is newest-first like the window it seeds from (`sortWindow`), so an arrival
+ * goes to the **front** and the eviction comes off the **end**. A batch is
+ * reversed rather than appended: within one flush the arrivals are still in broker order,
+ * and the newest of them belongs at row 0.
+ */
 export function appendBounded(
   rows: readonly DecodedMessage[],
   incoming: readonly DecodedMessage[],
@@ -32,12 +39,12 @@ export function appendBounded(
   if (incoming.length === 0) {
     return { rows: [...rows], dropped: 0 }
   }
-  const combined = [...rows, ...incoming]
+  const combined = [...[...incoming].reverse(), ...rows]
   if (combined.length <= cap) {
     return { rows: combined, dropped: 0 }
   }
   const dropped = combined.length - cap
-  return { rows: combined.slice(dropped), dropped }
+  return { rows: combined.slice(0, cap), dropped }
 }
 
 /**

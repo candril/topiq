@@ -26,21 +26,26 @@ function msg(partition: number, offset: bigint, ts: number): DecodedMessage {
 }
 
 describe("sortWindow", () => {
-  test("orders by timestamp, then partition, then offset", () => {
+  test("newest first: timestamp desc, then partition, then offset desc", () => {
     const rows = [msg(1, 5n, 200), msg(0, 9n, 100), msg(0, 1n, 200), msg(0, 2n, 200)]
     expect(sortWindow(rows).map((m) => [m.partition, m.offset])).toEqual([
-      [0, 9n],
-      [0, 1n],
       [0, 2n],
+      [0, 1n],
       [1, 5n],
+      [0, 9n],
     ])
+  })
+
+  test("row 0 is the newest row", () => {
+    const rows = [msg(0, 1n, 100), msg(0, 3n, 300), msg(0, 2n, 200)]
+    expect(sortWindow(rows)[0]?.offset).toBe(3n)
   })
 })
 
 describe("trimLatestN", () => {
-  test("keeps the newest n of the sorted window", () => {
+  test("keeps the newest n, which is the head of a descending window", () => {
     const sorted = sortWindow([msg(0, 1n, 100), msg(0, 2n, 200), msg(0, 3n, 300)])
-    expect(trimLatestN(sorted, 2).map((m) => m.offset)).toEqual([2n, 3n])
+    expect(trimLatestN(sorted, 2).map((m) => m.offset)).toEqual([3n, 2n])
     expect(trimLatestN(sorted, 5)).toHaveLength(3)
   })
 })

@@ -150,36 +150,37 @@ describe("messagesReducer", () => {
     expect(state.messages.follow.active).toBe(true)
   })
 
-  test("moving off the newest row unpins; moving down at the bottom does not", () => {
+  test("moving off the newest row unpins; moving up at the top does not", () => {
     let state = appReducer(createInitialState(), { type: "MSGS_FOLLOW_TOGGLE" })
-    state = appReducer(state, { type: "MSGS_MOVE", delta: 1, rowCount: 10 })
-    expect(state.messages.follow.pinned).toBe(true)
-    expect(state.messages.cursor).toBe(9)
     state = appReducer(state, { type: "MSGS_MOVE", delta: -1, rowCount: 10 })
+    expect(state.messages.follow.pinned).toBe(true)
+    // Newest-first: the live edge is row 0, and clamping keeps the cursor there.
+    expect(state.messages.cursor).toBe(0)
+    state = appReducer(state, { type: "MSGS_MOVE", delta: 1, rowCount: 10 })
     expect(state.messages.follow.pinned).toBe(false)
     // Relative from the newest row, not from the stale stored cursor.
-    expect(state.messages.cursor).toBe(8)
+    expect(state.messages.cursor).toBe(1)
   })
 
-  test("G rejoins the tail, g leaves it", () => {
+  test("g rejoins the tail, G leaves it", () => {
     let state = appReducer(createInitialState(), { type: "MSGS_FOLLOW_TOGGLE" })
-    state = appReducer(state, { type: "MSGS_MOVE", delta: -3, rowCount: 20 })
+    state = appReducer(state, { type: "MSGS_MOVE", delta: 3, rowCount: 20 })
     expect(state.messages.follow.pinned).toBe(false)
-    state = appReducer(state, { type: "MSGS_JUMP", to: "bottom", rowCount: 20 })
-    expect(state.messages.follow.pinned).toBe(true)
     state = appReducer(state, { type: "MSGS_JUMP", to: "top", rowCount: 20 })
+    expect(state.messages.follow.pinned).toBe(true)
+    state = appReducer(state, { type: "MSGS_JUMP", to: "bottom", rowCount: 20 })
     expect(state.messages.follow.pinned).toBe(false)
-    expect(state.messages.cursor).toBe(0)
+    expect(state.messages.cursor).toBe(19)
   })
 
-  test("G without following never pins — there is no tail to rejoin", () => {
+  test("g without following never pins — there is no tail to rejoin", () => {
     const state = appReducer(createInitialState(), {
       type: "MSGS_JUMP",
-      to: "bottom",
+      to: "top",
       rowCount: 5,
     })
     expect(state.messages.follow.pinned).toBe(false)
-    expect(state.messages.cursor).toBe(4)
+    expect(state.messages.cursor).toBe(0)
   })
 
   test("a range change leaves follow — it tails the end of the window it started on", () => {

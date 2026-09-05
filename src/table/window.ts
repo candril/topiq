@@ -16,20 +16,28 @@ import type { DecodedMessage, PartitionMeta } from "@/types.ts"
  */
 export const WINDOW_CAP = 10_000
 
-/** Partitions have no global order — timestamp is the only cross-partition axis, with
- *  partition/offset as a deterministic tiebreak. */
+/**
+ * Newest first. Partitions have no global order — timestamp is the only cross-partition
+ * axis, with partition/offset as a deterministic tiebreak.
+ *
+ * Descending because a peek is a question about *now*: the row you came for is the one
+ * that just landed, and making the reader scroll a 10k window to reach it would be an odd
+ * default for a tool whose default range is "latest 50". Row 0 is therefore the newest
+ * everywhere — the tail pins to the top, and `trimLatestN` keeps the head (spec 012).
+ */
 export function sortWindow(messages: readonly DecodedMessage[]): DecodedMessage[] {
   return [...messages].sort(
     (a, b) =>
-      a.timestamp.getTime() - b.timestamp.getTime() ||
+      b.timestamp.getTime() - a.timestamp.getTime() ||
       a.partition - b.partition ||
-      (a.offset < b.offset ? -1 : a.offset > b.offset ? 1 : 0),
+      (a.offset < b.offset ? 1 : a.offset > b.offset ? -1 : 0),
   )
 }
 
-/** latestN over-fetches per partition (spec 009): trim the sorted window to the newest n. */
+/** latestN over-fetches per partition (spec 009): trim the sorted window to the newest n,
+ *  which is its head now that the window is descending. */
 export function trimLatestN(sorted: readonly DecodedMessage[], n: number): DecodedMessage[] {
-  return sorted.length <= n ? [...sorted] : sorted.slice(sorted.length - n)
+  return sorted.length <= n ? [...sorted] : sorted.slice(0, n)
 }
 
 /** UTC, second precision plus millis — Kafka timestamps are epoch millis, and hiding the

@@ -29,7 +29,9 @@ unbuilt: the spec named the actions but not the selection they act on.
 - `h`/`l` (and `←`/`→`) move it; `0`/`$` jump to first/last column — monq's bindings.
 - The selected column is visibly marked in the header row, not only by the cell highlight,
   so the target of the next action is unambiguous.
-- `s` cycles **sort** on the selected column: ascending → descending → unsorted. Sorting
+- `s` cycles **sort** on the selected column: ascending → descending → unsorted, where
+  "unsorted" is the window's own order — timestamp descending
+  ([007](./007-message-table.md)), not arrival order. Sorting
   is client-side over the loaded window (Kafka has no server-side sort) and **must compare
   by decoded type** — BigInt columns compare as BigInt, never through `Number`
   ([nfr/006](./nfr/006-data-fidelity.md)).

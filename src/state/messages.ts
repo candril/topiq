@@ -33,24 +33,25 @@ function clamp(cursor: number, rowCount: number): number {
 }
 
 /** While pinned the cursor is wherever the newest row is, not where it was last stored —
- *  a relative move has to start from there or the first `k` jumps to a stale position. */
-function effectiveCursor(m: MessagesState, rowCount: number): number {
-  return m.follow.pinned ? rowCount - 1 : m.cursor
+ *  a relative move has to start from there or the first `j` jumps to a stale position.
+ *  The window is newest-first, so that row is 0. */
+function effectiveCursor(m: MessagesState): number {
+  return m.follow.pinned ? 0 : m.cursor
 }
 
 export const messagesReducer: SubReducer = (state, action) => {
   const m = state.messages
   switch (action.type) {
     case "MSGS_MOVE": {
-      const cursor = clamp(effectiveCursor(m, action.rowCount) + action.delta, action.rowCount)
+      const cursor = clamp(effectiveCursor(m) + action.delta, action.rowCount)
       return {
         ...state,
         messages: {
           ...m,
           cursor,
-          // Still on the newest row: the user pressed down at the bottom, which is what
-          // following already does — only moving off the end takes the wheel (spec 012).
-          follow: { ...m.follow, pinned: m.follow.pinned && cursor === action.rowCount - 1 },
+          // Still on the newest row: the user pressed up at the top, which is what
+          // following already does — only moving off it takes the wheel (spec 012).
+          follow: { ...m.follow, pinned: m.follow.pinned && cursor === 0 },
         },
       }
     }
@@ -60,8 +61,9 @@ export const messagesReducer: SubReducer = (state, action) => {
         messages: {
           ...m,
           cursor: action.to === "top" ? 0 : clamp(action.rowCount - 1, action.rowCount),
-          // G is how a reader who scrolled back rejoins the tail.
-          follow: { ...m.follow, pinned: m.follow.active && action.to === "bottom" },
+          // `g` is how a reader who scrolled down rejoins the tail: newest-first puts the
+          // live edge at the top, so it is the top that means "follow the topic".
+          follow: { ...m.follow, pinned: m.follow.active && action.to === "top" },
         },
       }
     case "MSGS_PROMPT_OPEN":

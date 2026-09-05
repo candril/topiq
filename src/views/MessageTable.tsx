@@ -165,11 +165,10 @@ export function MessageTable({
   // select — and therefore cannot sort by — partition, offset or timestamp (spec 024).
   const allColumns: Column[] = useMemo(() => [...META_COLUMNS, ...visibleColumns], [visibleColumns])
 
-  // Pinned, the cursor is wherever the newest row is — that is what makes the view
-  // auto-scroll while following, and moving off the bottom is what stops it (spec 012).
-  const cursor = ui.follow.pinned
-    ? Math.max(display.length - 1, 0)
-    : Math.min(ui.cursor, Math.max(display.length - 1, 0))
+  // Pinned, the cursor is wherever the newest row is — row 0, the window being newest
+  // first — which is what keeps the live edge in view while following; moving off it is
+  // what stops it (spec 012).
+  const cursor = ui.follow.pinned ? 0 : Math.min(ui.cursor, Math.max(display.length - 1, 0))
   // Suggestions come from what is actually loaded — the inferred columns and the rows'
   // own values — so they describe this topic rather than a schema guess (spec 010 P2).
   // Suggestions describe the *topic*, so they are built from the unfiltered window. Using

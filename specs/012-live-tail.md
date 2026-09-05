@@ -59,7 +59,7 @@ dropped — visibly.
 |-----|--------|
 | `f` | Toggle follow |
 | `space` | Pause / resume the tail (follow stays connected) |
-| `G` | Rejoin the newest row after scrolling back |
+| `g` | Rejoin the newest row after scrolling away |
 
 ## Decisions
 
@@ -87,9 +87,13 @@ dropped — visibly.
   resuming costs no rebalance.
 - **The cursor is pinned, not moved.** While following, `follow.pinned` means "the cursor
   is wherever the newest row is" — the reducer computes a relative move from there, so the
-  first `k` steps back from the tail rather than from a stale stored index. Moving down at
-  the bottom keeps the pin (that is what following already does); moving up releases it,
-  and `G` re-pins.
+  first `j` steps back from the tail rather than from a stale stored index. The window is
+  newest-first ([007](./007-message-table.md)), so that row is **0**: moving up at the top
+  keeps the pin (that is what following already does), moving down releases it, and `g`
+  re-pins.
+- **Arrivals land at the front of the buffer**, newest of a batch first, and eviction takes
+  from the end. The buffer has the same order as the window it was seeded from — two
+  orders would make the seam between window and tail visible as a jump.
 - **Leaving follow drops the tail buffer** and returns to the fetched window. `space` is
   the way to freeze the tail without losing it; making `f` freeze too would leave two
   indistinguishable stopped states.

@@ -30,22 +30,22 @@ function part(id: number, high: bigint): PartitionMeta {
 }
 
 describe("appendBounded", () => {
-  test("appends below the cap without dropping", () => {
+  test("arrivals land at the front, newest of the batch first", () => {
     const result = appendBounded([msg(0, 1n)], [msg(0, 2n), msg(0, 3n)], 10)
-    expect(result.rows.map((m) => m.offset)).toEqual([1n, 2n, 3n])
+    expect(result.rows.map((m) => m.offset)).toEqual([3n, 2n, 1n])
     expect(result.dropped).toBe(0)
   })
 
   test("evicts oldest-first at the cap and reports how many", () => {
-    const result = appendBounded([msg(0, 1n), msg(0, 2n)], [msg(0, 3n), msg(0, 4n)], 3)
-    expect(result.rows.map((m) => m.offset)).toEqual([2n, 3n, 4n])
+    const result = appendBounded([msg(0, 2n), msg(0, 1n)], [msg(0, 3n), msg(0, 4n)], 3)
+    expect(result.rows.map((m) => m.offset)).toEqual([4n, 3n, 2n])
     expect(result.dropped).toBe(1)
   })
 
   test("a batch larger than the cap keeps the newest rows", () => {
     const incoming = [msg(0, 1n), msg(0, 2n), msg(0, 3n), msg(0, 4n)]
     const result = appendBounded([msg(0, 0n)], incoming, 2)
-    expect(result.rows.map((m) => m.offset)).toEqual([3n, 4n])
+    expect(result.rows.map((m) => m.offset)).toEqual([4n, 3n])
     expect(result.dropped).toBe(3)
   })
 

@@ -65,6 +65,7 @@ const GROUPS: HelpSection[] = [
       ["n", "latest N"],
       ["b", "from beginning"],
       ["r", "reload window"],
+      ["—", "rows are newest first; g is the live edge"],
       ["s", "sort by selected column"],
       ["c", "choose columns"],
       ["-", "hide the selected column"],
@@ -76,7 +77,7 @@ const GROUPS: HelpSection[] = [
     [
       ["f", "follow the tail"],
       ["space", "pause / resume"],
-      ["G", "rejoin the newest row"],
+      ["g", "rejoin the newest row"],
     ],
   ],
   [

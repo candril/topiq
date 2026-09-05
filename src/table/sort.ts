@@ -7,7 +7,7 @@ import type { DecodedMessage } from "@/types.ts"
 export type SortDirection = "asc" | "desc"
 
 export interface SortState {
-  /** Column path, or null when unsorted (arrival order). */
+  /** Column path, or null for the window's own order — newest first (`sortWindow`). */
   path: string | null
   direction: SortDirection
 }

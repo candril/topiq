@@ -57,8 +57,11 @@ without opening every message.
   `capped at N` when the resolved range exceeds it.
 - Columns that do not fit the terminal width are dropped rarest-first (`fitColumns`)
   until P2's horizontal scroll exists — rows are never silently truncated mid-cell.
-- Rows sort by timestamp (partition/offset tiebreak): partitions have no global order,
-  and interleaving by arrival would shuffle on every reload.
+- Rows sort by timestamp **descending** — newest first, partition/offset as tiebreak.
+  Partitions have no global order, so interleaving by arrival would shuffle on every
+  reload; descending because a peek is a question about *now*, and the default range is
+  "latest 50". Row 0 is the newest row everywhere, which is also what the tail pins to
+  ([012](./012-live-tail.md)) and what `trimLatestN` keeps.
 - Messages that fail to decode render an explicit `decode failed` row (nfr/004); they
   and tombstones are excluded from column sampling.
 
