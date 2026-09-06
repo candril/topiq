@@ -3,10 +3,10 @@ import { toGroupRow, type GroupRow } from "@/kafka/groups.ts"
 import type { KafkaClient } from "@/kafka/types.ts"
 
 // Loading the group list (spec 017). Two phases on purpose: the listing is one round-trip
-// and paints immediately, while lag costs a committed-offset fetch *per group* and only
-// fills in after. A single combined await would leave the view blank for as long as the
-// slowest group takes, and lag is the column people came for — it has to arrive visibly,
-// not silently.
+// and paints immediately, while lag costs a committed-offset fetch *per group* (batched
+// behind one seam call — spec 029) and only fills in after. A single combined await would
+// leave the view blank for as long as the slowest group takes, and lag is the column
+// people came for — it has to arrive visibly, not silently.
 
 export type GroupsPhase = "listing" | "lag" | "ready" | "error"
 
@@ -19,10 +19,6 @@ export interface GroupsData {
    *  would under-report which groups exist. */
   undescribed: number
 }
-
-// Enough to hide the round-trip latency of a few dozen groups without opening a socket
-// storm against a shared broker.
-const DESCRIBE_CONCURRENCY = 8
 
 const EMPTY: GroupsData = { rows: null, phase: "listing", error: null, undescribed: 0 }
 
@@ -71,13 +67,10 @@ export function useGroups(client: KafkaClient, topic: string, reload: number): G
         undescribed: 0,
       })
 
-      const details = await mapConcurrent(overviews, DESCRIBE_CONCURRENCY, async (o) => {
-        try {
-          return await client.describeGroup(o.groupId, topic)
-        } catch {
-          return null
-        }
-      })
+      const details = await client.describeGroups(
+        overviews.map((o) => o.groupId),
+        topic,
+      )
       if (cancelled) {
         return
       }
@@ -106,22 +99,4 @@ export function useGroups(client: KafkaClient, topic: string, reload: number): G
   }, [client, topic, reload])
 
   return current.data
-}
-
-/** `Promise.all` with a ceiling on how many run at once. Results keep input order. */
-async function mapConcurrent<T, R>(
-  items: readonly T[],
-  limit: number,
-  run: (item: T) => Promise<R>,
-): Promise<R[]> {
-  const results = new Array<R>(items.length)
-  let next = 0
-  const worker = async (): Promise<void> => {
-    while (next < items.length) {
-      const index = next++
-      results[index] = await run(items[index]!)
-    }
-  }
-  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker))
-  return results
 }

@@ -19,6 +19,7 @@ import { type FetchRange, type PartitionStart, resolveStarts } from "./range.ts"
 // Small on purpose: kafkajs serialises admin requests anyway, and a wide window is what
 // provokes the empty-response race described on describeRetrying (spec 003).
 const WATERMARK_CONCURRENCY = 8
+const OFFSET_FETCH_CONCURRENCY = 8
 
 // kafkajs implements gzip and nothing else. Many clusters produce snappy batches,
 // and an unregistered codec does not degrade — it throws KafkaJSNotImplemented inside the
@@ -319,35 +320,42 @@ export function createKafkaClient(profile: ClusterProfile, password: string): Ka
         a.fetchOffsets({ groupId, topics: [topic] }),
         fetchPartitions(topic),
       ])
-      const group = described.groups[0]
-      const byPartition = new Map(
-        (committed.find((t) => t.topic === topic)?.partitions ?? []).map((p) => [
-          p.partition,
-          p.offset,
-        ]),
-      )
-      return {
+      return groupMeta(
         groupId,
-        state: group?.state ?? "Unknown",
-        memberCount: group?.members.length ?? 0,
-        members: (group?.members ?? []).map((m) => ({
-          memberId: m.memberId,
-          clientId: m.clientId,
-          clientHost: m.clientHost,
-          partitions: assignedPartitions(m.memberAssignment, topic),
-        })),
-        offsets: partitions.map((p) => {
-          const raw = byPartition.get(p.id)
-          // "-1" = never committed: lag is undefined, not zero (spec 017)
-          const committedOffset = raw === undefined || raw === "-1" ? null : BigInt(raw)
-          return {
-            partition: p.id,
-            committed: committedOffset,
-            high: p.high,
-            lag: committedOffset === null ? null : p.high - committedOffset,
-          }
-        }),
+        topic,
+        described.groups[0],
+        committedOffsets(committed, topic),
+        partitions,
+      )
+    },
+
+    async describeGroups(groupIds, topic): Promise<(ConsumerGroupMeta | null)[]> {
+      if (groupIds.length === 0) {
+        return []
       }
+      const a = await getAdmin()
+      const [described, partitions] = await Promise.all([
+        a.describeGroups(groupIds),
+        fetchPartitions(topic),
+      ])
+      const byId = new Map(described.groups.map((g) => [g.groupId, g]))
+      // OffsetFetch is the one request that is per group — its coordinator answers for
+      // that group alone. Bounded so a cluster with hundreds of groups is a queue, not a
+      // socket storm.
+      return await mapLimit(groupIds, OFFSET_FETCH_CONCURRENCY, async (groupId) => {
+        try {
+          const committed = await a.fetchOffsets({ groupId, topics: [topic] })
+          return groupMeta(
+            groupId,
+            topic,
+            byId.get(groupId),
+            committedOffsets(committed, topic),
+            partitions,
+          )
+        } catch {
+          return null
+        }
+      })
     },
 
     async resolveOffsets(topic, range): Promise<PartitionStart[]> {
@@ -392,6 +400,49 @@ export function createKafkaClient(profile: ClusterProfile, password: string): Ka
       producer = null
       admin = null
     },
+  }
+}
+
+type DescribedGroup = Awaited<ReturnType<Admin["describeGroups"]>>["groups"][number]
+type FetchedOffsets = Awaited<ReturnType<Admin["fetchOffsets"]>>
+
+function committedOffsets(fetched: FetchedOffsets, topic: string): Map<number, string> {
+  return new Map(
+    (fetched.find((t) => t.topic === topic)?.partitions ?? []).map((p) => [p.partition, p.offset]),
+  )
+}
+
+/** One shape for a group whether it was described alone or in a batch. A group the broker
+ *  did not describe (deleted between the listing and now) is "Unknown" with no members —
+ *  its committed offsets, if any, are still worth showing. */
+function groupMeta(
+  groupId: string,
+  topic: string,
+  group: DescribedGroup | undefined,
+  committed: Map<number, string>,
+  partitions: PartitionMeta[],
+): ConsumerGroupMeta {
+  return {
+    groupId,
+    state: group?.state ?? "Unknown",
+    memberCount: group?.members.length ?? 0,
+    members: (group?.members ?? []).map((m) => ({
+      memberId: m.memberId,
+      clientId: m.clientId,
+      clientHost: m.clientHost,
+      partitions: assignedPartitions(m.memberAssignment, topic),
+    })),
+    offsets: partitions.map((p) => {
+      const raw = committed.get(p.id)
+      // "-1" = never committed: lag is undefined, not zero (spec 017)
+      const committedOffset = raw === undefined || raw === "-1" ? null : BigInt(raw)
+      return {
+        partition: p.id,
+        committed: committedOffset,
+        high: p.high,
+        lag: committedOffset === null ? null : p.high - committedOffset,
+      }
+    }),
   }
 }
 

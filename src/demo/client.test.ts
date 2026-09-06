@@ -178,6 +178,15 @@ describe("demo client — writes", () => {
     expect(meta.members[0]!.partitions).toEqual([0, 1])
   })
 
+  test("describeGroups answers per id, in order, as describeGroup would", async () => {
+    const c = client()
+    const ids = ["legacy-reader", "no-such-group", "analytics-sink"]
+    const batch = await c.describeGroups(ids, ORDERS)
+    expect(batch.map((m) => m?.groupId)).toEqual(ids)
+    expect(batch[1]?.state).toBe("Unknown")
+    expect(batch[0]).toEqual(await c.describeGroup("legacy-reader", ORDERS))
+  })
+
   test("listGroups reports state and member counts from the seed", async () => {
     const groups = await client().listGroups()
     expect(groups.find((g) => g.groupId === "order-processor")).toEqual({

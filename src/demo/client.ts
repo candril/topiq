@@ -68,6 +68,25 @@ export function createDemoClient(seed: SeededCluster): KafkaClient {
     name: topic.name,
     partitions: meta(topic),
   })
+  const groupMeta = (groupId: string, topic: SeededTopic): ConsumerGroupMeta => {
+    const group = groups.get(groupId)
+    const committed = group?.committed.get(topic.name)
+    return {
+      groupId,
+      state: group?.state ?? "Unknown",
+      memberCount: group?.members.length ?? 0,
+      members: group?.members ?? [],
+      offsets: meta(topic).map((p) => {
+        const offset = committed?.get(p.id) ?? null
+        return {
+          partition: p.id,
+          committed: offset,
+          high: p.high,
+          lag: offset === null ? null : p.high - offset,
+        }
+      }),
+    }
+  }
 
   function resolveRange(
     topic: SeededTopic,
@@ -296,24 +315,15 @@ export function createDemoClient(seed: SeededCluster): KafkaClient {
     async describeGroup(groupId, name): Promise<ConsumerGroupMeta> {
       await connect()
       await wait("group")
+      return groupMeta(groupId, topicOrThrow(name))
+    },
+
+    async describeGroups(groupIds, name): Promise<(ConsumerGroupMeta | null)[]> {
+      await connect()
+      // One wait for the batch, as the real client pays one DescribeGroups (spec 029).
+      await wait("group")
       const topic = topicOrThrow(name)
-      const group = groups.get(groupId)
-      const committed = group?.committed.get(name)
-      return {
-        groupId,
-        state: group?.state ?? "Unknown",
-        memberCount: group?.members.length ?? 0,
-        members: group?.members ?? [],
-        offsets: meta(topic).map((p) => {
-          const offset = committed?.get(p.id) ?? null
-          return {
-            partition: p.id,
-            committed: offset,
-            high: p.high,
-            lag: offset === null ? null : p.high - offset,
-          }
-        }),
-      }
+      return groupIds.map((groupId) => groupMeta(groupId, topic))
     },
 
     async resolveOffsets(name, range) {

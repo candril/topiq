@@ -60,6 +60,11 @@ export interface KafkaClient {
   produce(topic: string, records: ProduceRecord[]): Promise<{ partition: number; offset: bigint }[]>
   listGroups(): Promise<GroupOverview[]>
   describeGroup(groupId: string, topic: string): Promise<ConsumerGroupMeta>
+  /** `describeGroup` for a whole list: one `DescribeGroups` and one watermark read for all
+   *  of them, an `OffsetFetch` per group (spec 029). One entry per id, in input order —
+   *  `null` where that group's offsets could not be read, so the caller keeps the row with
+   *  unknown lag instead of dropping a group that exists ([017](../../specs/017-consumer-groups.md)). */
+  describeGroups(groupIds: string[], topic: string): Promise<(ConsumerGroupMeta | null)[]>
   /** Where a range lands per partition, without reading anything. Timestamp ranges need a
    *  broker lookup, which is why this is on the seam rather than in `range.ts`: the seek
    *  preview has to show the offsets it is about to commit (spec 018). */

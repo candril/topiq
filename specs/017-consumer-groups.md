@@ -87,10 +87,12 @@ could scroll. Asking for the open pane closes it.
   ones. `e` reveals them, dimmed. `src/kafka/groups.ts` owns the prefix constant and
   `identity.ts` builds the ids from it, so the filter cannot drift from the generator.
 - **Two-phase load.** The listing is one round-trip; lag costs a committed-offset fetch
-  *per group*, run at a concurrency of 8. The list paints on the listing and lag fills in
-  after — one combined await would leave the view blank for as long as the slowest group
-  takes. Rows whose detail fetch failed stay in the list with unmeasured lag: dropping them
-  would under-report which groups exist.
+  *per group*, batched behind the seam's `describeGroups` — one `DescribeGroups` and one
+  watermark read for the whole list, `OffsetFetch` per group at a concurrency of 8
+  ([029](./029-connection-hygiene-and-fetch-latency.md)). The list paints on the listing
+  and lag fills in after — one combined await would leave the view blank for as long as
+  the slowest group takes. Rows whose detail fetch failed stay in the list with unmeasured
+  lag (`null` in the batch): dropping them would under-report which groups exist.
 - **"Consumes this topic"** means a committed offset on it *or* a member assigned one of
   its partitions. Membership alone does not count — a member of a multi-topic group can be
   assigned nothing here. A group whose detail has not landed yet stays visible under the
@@ -115,7 +117,7 @@ could scroll. Asking for the open pane closes it.
 | `src/state/groups.ts` | View state: cursor, toggles, sort, the single pane |
 | `src/views/GroupList.tsx` | The list, its keymap, the bottom bar |
 | `src/views/GroupPanes.tsx` | Offsets and members panes + the shared row-count helper |
-| `src/views/useGroups.ts` | Two-phase load and refresh |
+| `src/views/useGroups.ts` | Two-phase load and refresh — one `describeGroups` call, not a fan-out |
 
 ## Open Questions
 
