@@ -1,0 +1,77 @@
+---
+// Starlight's footer plus a row linking the sibling tools. Generated from
+// candril/homebrew-tap/templates/Footer.astro; edit it there.
+import Default from '@astrojs/starlight/components/Footer.astro'
+
+const current = 'topiq'
+const tools = [
+  { name: 'lane', what: 'Jira', href: 'https://candril.github.io/lane/' },
+  { name: 'monq', what: 'MongoDB', href: 'https://candril.github.io/monq/' },
+  { name: 'presto', what: 'pull requests', href: 'https://candril.github.io/presto/' },
+  { name: 'riff', what: 'code review', href: 'https://candril.github.io/riff/' },
+  { name: 'topiq', what: 'Kafka', href: 'https://candril.github.io/topiq/' },
+]
+---
+
+<Default><slot /></Default>
+
+<nav class="siblings" aria-label="Related tools">
+  <p>
+    One of five terminal tools from <a href="https://github.com/candril">candril</a>, built the
+    same way and installed the same way:
+  </p>
+  <ul>
+    {
+      tools.map((t) => (
+        <li>
+          {t.name === current ? (
+            <span class="current">{t.name}</span>
+          ) : (
+            <a href={t.href}>{t.name}</a>
+          )}
+          <span class="what">{t.what}</span>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<style>
+  .siblings {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--sl-color-hairline);
+    font-size: var(--sl-text-sm);
+    color: var(--sl-color-gray-3);
+  }
+  .siblings p {
+    margin: 0 0 0.5rem;
+  }
+  .siblings ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.5rem;
+  }
+  .siblings li {
+    display: flex;
+    gap: 0.4rem;
+    align-items: baseline;
+  }
+  .siblings a {
+    color: var(--sl-color-accent-high);
+    text-decoration: none;
+  }
+  .siblings a:hover {
+    text-decoration: underline;
+  }
+  .current {
+    color: var(--sl-color-white);
+    font-weight: 600;
+  }
+  .what {
+    color: var(--sl-color-gray-3);
+  }
+</style>

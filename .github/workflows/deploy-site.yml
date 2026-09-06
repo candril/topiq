@@ -1,4 +1,5 @@
-name: Deploy site to GitHub Pages
+# Generated from candril/homebrew-tap/templates/deploy-site.yml; edit it there.
+name: 📖 Deploy site to GitHub Pages
 
 on:
   push:

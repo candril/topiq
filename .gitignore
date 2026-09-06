@@ -8,3 +8,6 @@ config.toml
 
 # A cluster CA names the project that issued it. Keep it beside the real config.
 *.pem
+
+# Nix: the flake is deliberately unlocked (see flake.nix)
+flake.lock

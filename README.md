@@ -7,13 +7,11 @@
 <p align="center">Peek, filter, replay. Kafka without leaving the terminal.</p>
 
 > [!CAUTION]
-> topiq is young, spec-first, and was largely written with an AI pair. It *writes* —
-> replay, produce, offset seek — so every write is off by default per cluster and confirmed
-> at the point of action. Point it at dev and test clusters first, and expect rough edges.
+> **Spec-driven, AI-generated.** Every feature in topiq starts as a numbered spec in [`specs/`](specs/), and the code and this documentation were generated from those specs with an AI pair. Use it with care: topiq *writes* to Kafka — replay, produce, offset seeks. Every write is off by default per cluster and confirmed at the point of action. Start with `topiq --demo`, then dev and test clusters.
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/candril/topiq/main/scripts/install.sh | bash
-topiq --demo        # an offline demo cluster — no config, no broker
+brew install candril/tap/topiq          # or: nix run github:candril/topiq
+topiq --demo                            # an offline demo cluster — no config, no broker
 ```
 
 <img src="site/src/assets/topiq-demo.gif" alt="topiq demo" width="100%" />
@@ -51,33 +49,23 @@ Full docs: **[candril.github.io/topiq](https://candril.github.io/topiq/)**
 ## Install
 
 ```sh
+brew install candril/tap/topiq
+```
+
+```sh
+nix run github:candril/topiq              # try it; `nix profile install github:candril/topiq` keeps it
+```
+
+```sh
 curl -fsSL https://raw.githubusercontent.com/candril/topiq/main/scripts/install.sh | bash
 ```
 
-Installs the latest release into `/usr/local/bin`, verifying the SHA256 first. Override
-with `TOPIQ_INSTALL_DIR=~/.local/bin` or pin with `TOPIQ_VERSION=0.1.0`.
+All three install the same binary — the one attached to the latest
+[release](https://github.com/candril/topiq/releases), verified against its `SHA256SUMS` — prebuilt
+for macOS (Apple Silicon, Intel) and Linux (x64, arm64). The installer puts it in `/usr/local/bin`;
+`TOPIQ_INSTALL_DIR=~/.local/bin` moves it, `TOPIQ_VERSION=0.1.0` pins it.
 
-Then, before configuring anything:
-
-```sh
-topiq --demo
-```
-
-An offline demo cluster — a fictional shop's order topics, seeded consumer groups, real
-Avro behind real schema ids. No config, no broker. **Writes work**: replay a message and
-watch it land in the tail. `demo-prod` is the same cluster with `allow_write = false`, so
-the guardrails are demonstrable too.
-
-Or grab a binary from [Releases](https://github.com/candril/topiq/releases) —
-`topiq-<os>-<arch>.gz`, checksums in `SHA256SUMS`.
-
-From source, with [Bun](https://bun.sh):
-
-```sh
-git clone https://github.com/candril/topiq && cd topiq
-bun install
-just install-bin     # builds and installs to ~/.local/bin
-```
+From source, with [Bun](https://bun.sh): `git clone https://github.com/candril/topiq.git && cd topiq && bun install && just install-bin`.
 
 ## Configure
 
@@ -150,3 +138,7 @@ Specs come before code: [`specs/`](./specs/) is the feature record and
 ## License
 
 MIT
+
+---
+
+<p align="center"><sub>One of five terminal tools from <a href="https://github.com/candril">candril</a> — one spec-first process, the same three installers:<br><a href="https://candril.github.io/lane/">lane</a> (Jira) · <a href="https://candril.github.io/monq/">monq</a> (MongoDB) · <a href="https://candril.github.io/presto/">presto</a> (pull requests) · <a href="https://candril.github.io/riff/">riff</a> (code review) · <a href="https://candril.github.io/topiq/">topiq</a> (Kafka)</sub></p>

@@ -24,15 +24,12 @@ hero:
 import { CardGrid, Card, Aside } from '@astrojs/starlight/components'
 
 <Aside type="caution">
-topiq is young and built spec-first — every feature traces to a numbered spec in
-[`specs/`](https://github.com/candril/topiq/tree/main/specs). It *writes*: replay, produce,
-offset seek. Every write is off by default per cluster and confirmed at the point of action.
-Point it at dev and test clusters first, and expect rough edges.
+**Spec-driven, AI-generated.** Every feature in topiq starts as a numbered spec in [`specs/`](https://github.com/candril/topiq/tree/main/specs), and the code and this documentation were generated from those specs with an AI pair. Use it with care: topiq *writes* to Kafka — replay, produce, offset seeks. Every write is off by default per cluster and confirmed at the point of action. Start with `topiq --demo`, then dev and test clusters.
 </Aside>
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/candril/topiq/main/scripts/install.sh | bash
-topiq --demo      # an offline demo cluster — no config, no broker
+brew install candril/tap/topiq          # or: nix run github:candril/topiq
+topiq --demo                            # an offline demo cluster — no config, no broker
 ```
 
 ![The README demo](../../assets/topiq-demo.gif)
@@ -141,7 +138,9 @@ the write.
 ## Install
 
 ```sh
+brew install candril/tap/topiq            # or: nix run github:candril/topiq
 curl -fsSL https://raw.githubusercontent.com/candril/topiq/main/scripts/install.sh | bash
 ```
 
-See the [installation guide](/topiq/guide/installation/) for the config and first run.
+See the [installation guide](/topiq/guide/installation/) for the Nix flake, the installer's
+variables, requirements and first run.

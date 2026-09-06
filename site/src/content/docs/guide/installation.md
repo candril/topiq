@@ -5,14 +5,37 @@ description: Install topiq, try the demo, then point it at a cluster.
 
 ## Install
 
-Prebuilt binaries for macOS (Apple Silicon and Intel) and Linux (x64 and arm64):
+Prebuilt binaries for macOS (Apple Silicon and Intel) and Linux (x64 and arm64), by any of three
+routes. All three install the same binary: the one attached to the latest
+[release](https://github.com/candril/topiq/releases), verified against its `SHA256SUMS`.
+
+### Homebrew
+
+```sh
+brew install candril/tap/topiq
+```
+
+The tap is [candril/homebrew-tap](https://github.com/candril/homebrew-tap); `brew upgrade` picks
+up new releases.
+
+### Nix
+
+```sh
+nix run github:candril/topiq                 # run it once
+nix profile install github:candril/topiq     # keep it
+```
+
+Or as a flake input — `inputs.topiq.url = "github:candril/topiq"`, then
+`inputs.topiq.packages.${system}.default`. The flake is deliberately unlocked and re-exports
+the package from the tap, so it always resolves to the latest release.
+
+### Installer script
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/candril/topiq/main/scripts/install.sh | bash
 ```
 
-The installer detects your platform, downloads the latest
-[release](https://github.com/candril/topiq/releases), verifies its SHA256 against the
+The installer detects your platform, downloads the latest release, verifies its SHA256 against the
 release's `SHA256SUMS`, and puts `topiq` in `/usr/local/bin`. Two variables change that:
 
 ```sh

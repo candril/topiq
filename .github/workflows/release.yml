@@ -1,4 +1,5 @@
-name: Release
+# Generated from candril/homebrew-tap/templates/release.yml; edit it there.
+name: 🚀 Release
 
 on:
   push:
@@ -10,7 +11,7 @@ permissions:
 jobs:
   build:
     # Each target builds on a runner of its own platform rather than cross-compiling:
-    # the binary that ships is the one that was exercised (spec 026).
+    # the binary that ships is the one that was exercised.
     strategy:
       matrix:
         include:
@@ -40,12 +41,16 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Build binary
-        run: bun scripts/build.ts "dist/topiq-${{ matrix.target_os }}-${{ matrix.target_arch }}"
+        run: bun scripts/build.ts
+        env:
+          BUILD_TARGET_OS: ${{ matrix.target_os }}
+          BUILD_TARGET_ARCH: ${{ matrix.target_arch }}
 
       - name: Binary reports the tag
         run: |
           binary="dist/topiq-${{ matrix.target_os }}-${{ matrix.target_arch }}"
           version=$("$binary" --version)
+          version="${version#topiq }"
           echo "$binary → $version"
           test "$version" = "${GITHUB_REF_NAME#v}" || {
             echo "::error::binary reports '$version', tag is '${GITHUB_REF_NAME#v}'"
@@ -104,3 +109,17 @@ jobs:
             artifacts/SHA256SUMS
           draft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
+
+      # candril/homebrew-tap (Formula + Nix flake) polls for new releases on a schedule.
+      # A TAP_TOKEN secret with `actions: write` on that repo makes it immediate; without
+      # one the tap catches up within the hour.
+      - name: Nudge the tap
+        if: ${{ !contains(github.ref_name, '-') }}
+        env:
+          TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
+        run: |
+          if [ -z "$TAP_TOKEN" ]; then
+            echo "TAP_TOKEN not set; candril/homebrew-tap will pick this release up on its schedule"
+            exit 0
+          fi
+          GH_TOKEN="$TAP_TOKEN" gh workflow run update.yml -R candril/homebrew-tap -f tool=topiq

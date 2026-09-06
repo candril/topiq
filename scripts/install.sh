@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# topiq installer (spec 026)
+# topiq installer
 # Usage: curl -fsSL https://raw.githubusercontent.com/candril/topiq/main/scripts/install.sh | bash
 #
-#   TOPIQ_VERSION=0.2.0        install a specific release instead of the latest
+#   TOPIQ_VERSION=0.2.0              install a specific release instead of the latest
 #   TOPIQ_INSTALL_DIR=~/.local/bin   install somewhere other than /usr/local/bin
+#
+# Homebrew and Nix users have shorter routes:
+#   brew install candril/tap/topiq
+#   nix run github:candril/topiq
+#
+# This file is generated from candril/homebrew-tap/templates/install.sh; edit it there.
 
 REPO="candril/topiq"
 INSTALL_DIR="${TOPIQ_INSTALL_DIR:-/usr/local/bin}"
@@ -86,4 +92,4 @@ echo "topiq ${TAG} installed to ${INSTALL_DIR}/${BINARY_NAME}"
 if ! command -v topiq >/dev/null 2>&1; then
   echo "Note: ${INSTALL_DIR} is not on your PATH."
 fi
-echo "Next: copy config.example.toml to ~/.config/topiq/config.toml, then run 'topiq --help'."
+echo "Run 'topiq --help' to get started."

@@ -33,7 +33,7 @@ jobs:
 
       # A release should never be the first time the compile is tried on Linux (spec 026).
       - name: Build
-        run: bun scripts/build.ts dist/topiq
+        run: bun scripts/build.ts
 
       - name: Binary runs
         run: ./dist/topiq --version
