@@ -7,6 +7,21 @@ release, so write it before tagging.
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-09-06
+
+### Added
+
+- Homebrew (`brew install candril/tap/topiq`) and Nix (`nix run github:candril/topiq`) via
+  [candril/homebrew-tap](https://github.com/candril/homebrew-tap), alongside the curl installer.
+  All three install the release binary, verified against `SHA256SUMS`.
+- The installer, build script and release workflow shared with the sibling tools; a released
+  binary reports its tag, and the release writes `release.json` for the Nix flake.
+
+### Changed
+
+- The README and docs site carry the shared spec-driven notice, the same install section as
+  the sibling tools, and a footer linking them.
+
 ## [0.1.0] - 2026-09-06
 
 First release. Read-only paths are exercised against a live cluster; every write path is
@@ -62,5 +77,6 @@ built and unit-tested but has not yet produced a byte to a real broker.
 - `TOPIQ_KAFKA_LOG=<path>` appends the Kafka client's debug log to a file, with anything
   token-shaped redacted.
 
-[Unreleased]: https://github.com/candril/topiq/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/candril/topiq/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/candril/topiq/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/candril/topiq/releases/tag/v0.1.0

@@ -1,9 +1,16 @@
 {
   "name": "topiq",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Peek, filter, replay. Kafka without leaving the terminal.",
   "license": "MIT",
-  "keywords": ["kafka", "avro", "terminal", "tui", "cli", "bun"],
+  "keywords": [
+    "kafka",
+    "avro",
+    "terminal",
+    "tui",
+    "cli",
+    "bun"
+  ],
   "module": "src/index.tsx",
   "type": "module",
   "bin": {
