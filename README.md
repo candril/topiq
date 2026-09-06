@@ -6,6 +6,8 @@
 
 <p align="center">Peek, filter, replay. Kafka without leaving the terminal.</p>
 
+<p align="center"><a href="https://candril.github.io/topiq/"><strong>Documentation</strong></a> · <a href="https://candril.github.io/topiq/guide/installation/">Install</a> · <a href="https://candril.github.io/topiq/reference/key-bindings/">Key bindings</a> · <a href="https://candril.github.io/topiq/reference/peek-and-filter/">Peek &amp; filter</a></p>
+
 > [!CAUTION]
 > **Spec-driven, AI-generated.** Every feature in topiq starts as a numbered spec in [`specs/`](specs/), and the code and this documentation were generated from those specs with an AI pair. Use it with care: topiq *writes* to Kafka — replay, produce, offset seeks. Every write is off by default per cluster and confirmed at the point of action. Start with `topiq --demo`, then dev and test clusters.
 
