@@ -72,6 +72,7 @@ lifecycle, prioritisation, Open Questions, and cross-linking.
 | 026 | [Release & Distribution](./026-release-and-distribution.md) | In Progress | `v*` tag → per-platform binaries + `SHA256SUMS` → GitHub Release; `curl \| bash` installer; brew tap and flake on top |
 | 027 | [Demo Mode](./027-demo-mode.md) | In Progress | `topiq --demo`: an offline seeded cluster behind the seam, writes enabled; two profiles (test writable, prod refusing) |
 | 028 | [Docs Screenshots, Demo Gif & Site](./028-docs-screenshots-and-gif.md) | In Progress | lane's tmux + Pillow pipeline over `--demo`; Astro/Starlight site on Pages |
+| 029 | [Connection Hygiene & Fetch Latency](./029-connection-hygiene-and-fetch-latency.md) | In Progress | Never create a topic, attributable ids, end-of-partition from the fetch, one describe per group list, `TOPIQ_KAFKA_LOG`; group-free reads pending |
 
 ## NFR Specs
 
@@ -193,6 +194,7 @@ lifecycle, prioritisation, Open Questions, and cross-linking.
   [016](./016-cross-cluster-copy.md)'s prod-destination refusal and its P2 (copy a filtered
   selection, dry run), and [023](./023-cluster-groups-and-environments.md) P2's env switch,
   which now has the sibling and topic-mapping helpers it needs.
+- **Connection hygiene** ([029](./029-connection-hygiene-and-fetch-latency.md)): P1 built — auto-create off on every path, `client.id`/group ids name the OS user, windows end on the fetch's high watermark, the groups pane describes once, `TOPIQ_KAFKA_LOG` debug sink. P2 (no consumer group, batched watermarks) waits on a live measurement.
 
 ## Milestones
 
