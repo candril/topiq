@@ -96,6 +96,10 @@ The one abstraction that keeps the UI independent of a Kafka library, and the de
   ephemeral `topiq-read-*` group with `autoCommit: false` and `consumer.seek` after
   `run()`, so no offset is ever committed ([009](./009-paging-and-fetch-modes.md)).
   Spec 009's "no consumer group of its own" is amended to "no *committed* group".
+  What that group join costs a shared cluster, and the group-free read that would remove
+  it, are [029](./029-connection-hygiene-and-fetch-latency.md)'s subject; the same spec
+  turns auto topic creation off, names the OS user in `client.id` and the group id, and
+  ends a window on the fetch's last offset rather than a delivered one.
 
 ## File Structure
 

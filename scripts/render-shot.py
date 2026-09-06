@@ -25,6 +25,8 @@ SIZE = 30  # rendered at 2x and left that way; retina-friendly on the docs site
 BG = (26, 27, 38)  # theme.bg
 FG = (192, 202, 245)  # theme.text
 PAD = 40
+# The cell grid: Menlo's advance width is not a fixed fraction of the point size, so
+# measure it instead of assuming one — a wrong CW skews every column across the image.
 CW = int(round(ImageFont.truetype(FONT, SIZE, index=0).getlength("M")))
 LH = int(round(SIZE * 1.2))
 
