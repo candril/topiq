@@ -110,11 +110,46 @@ jobs:
           draft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
 
-      # candril/homebrew-tap (Formula + Nix flake) polls for new releases on a schedule.
-      # A TAP_TOKEN secret with `actions: write` on that repo makes it immediate; without
-      # one the tap catches up within the hour.
+  # The Nix flake packages the release binary and reads release.json for the version and
+  # checksums, so this commit is what makes `nix run github:candril/topiq` the new release.
+  flake:
+    needs: release
+    if: ${{ !contains(github.ref_name, '-') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Write release.json
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          sum() { sha256sum "artifacts/topiq-$1.gz" | cut -d' ' -f1; }
+          jq -n --arg version "$version" \
+            --arg da "$(sum darwin-arm64)" --arg dx "$(sum darwin-x64)" \
+            --arg la "$(sum linux-arm64)" --arg lx "$(sum linux-x64)" \
+            '{version: $version, sha256: {"darwin-arm64": $da, "darwin-x64": $dx, "linux-arm64": $la, "linux-x64": $lx}}' \
+            > release.json
+          cat release.json
+
+      - name: Commit to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add release.json
+          git diff --cached --quiet && { echo "release.json unchanged"; exit 0; }
+          git commit -m "release: ${GITHUB_REF_NAME#v} in release.json for the Nix flake"
+          git push origin main
+
+      # candril/homebrew-tap (Formula) polls for new releases on a schedule. A TAP_TOKEN
+      # secret with `actions: write` on that repo makes it immediate; without one the tap
+      # catches up within the hour.
       - name: Nudge the tap
-        if: ${{ !contains(github.ref_name, '-') }}
         env:
           TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
         run: |

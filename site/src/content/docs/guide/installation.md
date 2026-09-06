@@ -26,8 +26,8 @@ nix profile install github:candril/topiq     # keep it
 ```
 
 Or as a flake input — `inputs.topiq.url = "github:candril/topiq"`, then
-`inputs.topiq.packages.${system}.default`. The flake is deliberately unlocked and re-exports
-the package from the tap, so it always resolves to the latest release.
+`inputs.topiq.packages.${system}.default`. The flake packages the release binary; the release
+workflow writes its `release.json`, so `nix run` and `nix flake update` land on the newest release.
 
 ### Installer script
 
