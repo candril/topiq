@@ -207,44 +207,62 @@ export function createKafkaClient(profile: ClusterProfile, password: string): Ka
 
       await consumer.connect()
       await consumer.subscribe({ topic })
+      // The end of a partition is read off the fetch, never off a delivered record: on a
+      // transactional topic the record at high−1 is a commit marker, and kafkajs filters
+      // markers and aborted records out *before* the batch callback — a batch that held only
+      // those never reaches it at all. END_BATCH_PROCESS fires for every batch either way,
+      // with the last offset the fetch accounted for (spec 029). Compaction can still leave
+      // nothing at all at the tail (a removed tombstone); that fetch comes back empty and
+      // kafkajs announces nothing for it — closed under 029 P2 with the raw fetch path.
+      const endOfPartition = (partition: number, lastOffset: bigint): void => {
+        if (follow || !pending.has(partition)) {
+          return
+        }
+        const high = highs.get(partition)
+        if (high !== undefined && lastOffset >= high - 1n) {
+          pending.delete(partition)
+        }
+        if (pending.size === 0) {
+          resolveDone()
+        }
+      }
+      consumer.on(consumer.events.END_BATCH_PROCESS, ({ payload }) =>
+        endOfPartition(payload.partition, BigInt(payload.lastOffset)),
+      )
       void consumer
         .run({
           autoCommit: false,
-          eachMessage: async ({ partition, message }) => {
+          eachBatch: async ({ batch }) => {
+            const { partition } = batch
             // Following, every scoped partition stays open: `pending` only tracks which of
             // them still has history to read, and a tail starts with none of them there.
-            if (
-              delivered >= opts.limit ||
-              !(follow ? scopedIds.has(partition) : pending.has(partition))
-            ) {
+            if (!(follow ? scopedIds.has(partition) : pending.has(partition))) {
               return
             }
-            const offset = BigInt(message.offset)
             const start = startAt.get(partition)
-            if (start === undefined || offset < start) {
+            if (start === undefined) {
               return
             }
-            delivered++
-            onMessage({
-              topic,
-              partition,
-              offset,
-              timestamp: new Date(Number(message.timestamp)),
-              key: message.key,
-              value: message.value,
-              headers: normalizeHeaders(message.headers),
-            })
-            if (follow) {
+            for (const message of batch.messages) {
               if (delivered >= opts.limit) {
-                resolveDone()
+                break
               }
-              return
+              const offset = BigInt(message.offset)
+              if (offset < start) {
+                continue
+              }
+              delivered++
+              onMessage({
+                topic,
+                partition,
+                offset,
+                timestamp: new Date(Number(message.timestamp)),
+                key: message.key,
+                value: message.value,
+                headers: normalizeHeaders(message.headers),
+              })
             }
-            const high = highs.get(partition)
-            if (high !== undefined && offset >= high - 1n) {
-              pending.delete(partition)
-            }
-            if (delivered >= opts.limit || pending.size === 0) {
+            if (delivered >= opts.limit) {
               resolveDone()
             }
           },

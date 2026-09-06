@@ -30,11 +30,11 @@ private fetch path and the decision needs a measurement first (Open Questions).
   or a lag exporter says *who*, not just "topiq". The prefix stays
   `topiq-read-` so [017](./017-consumer-groups.md)'s filter is unchanged.
 - **A finite window ends when the partition ends, not when a message says so.** The end
-  of a partition is the fetch response's high watermark, never `offset ≥ high − 1` on a
-  delivered record: on a transactional topic the record at `high − 1` is a commit marker
-  the client filters out, and on a compacted one it may be a removed tombstone. Either
-  left the window on "loading" forever — the silent stall
-  [nfr/004](./nfr/004-reliability-and-errors.md) forbids.
+  of a partition is the last offset the fetch accounted for, never `offset ≥ high − 1` on
+  a *delivered* record: on a transactional topic the record at `high − 1` is a commit
+  marker the client filters out before delivery, so the old check left the window on
+  "loading" forever — the silent stall [nfr/004](./nfr/004-reliability-and-errors.md)
+  forbids. (Technical Notes: the one case kafkajs cannot report.)
 - **One describe per group list, one watermark read per topic.** The groups pane
   ([017](./017-consumer-groups.md)) describes every group in one `DescribeGroups` and
   reads the topic's watermarks once; only `OffsetFetch` is per group, at a concurrency
@@ -104,9 +104,13 @@ so none of 3–8 reuse the admin's connections. Follow mode repeats 3–9 for it
   "rows whose detail failed stay, with unknown lag" survives the batching. `describeGroup`
   stays for the seek flow ([018](./018-consumer-group-offset-seek.md)), which needs one
   group at one moment.
-- End-of-partition detection uses `eachBatch`: a batch carries the partition's
-  `highWatermark` and `lastOffset()`, and kafkajs computes `lastOffset()` from the high
-  watermark when every record in the batch was filtered. `eachMessage` never sees either.
+- End-of-partition detection listens to kafkajs's `END_BATCH_PROCESS` event, not to the
+  batch callback: a batch that held only control records or aborted records is resolved
+  inside the runner and never reaches `eachBatch`, but the event fires for it with the
+  last offset the fetch accounted for. Delivery moved to `eachBatch` at the same time so
+  the limit can stop a batch mid-way. One gap remains: a partition whose tail record was a
+  tombstone that compaction removed answers a fetch with nothing at all, and kafkajs
+  announces nothing for an empty fetch. Only the raw fetch path (P2) sees that response.
 - The log sink is a kafkajs `logCreator`. It writes through the same token-shaped
   redaction `password_cmd` failures use; kafkajs does not log the SASL secret, but a
   debug log is exactly the file someone pastes into a ticket.
