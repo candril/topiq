@@ -27,6 +27,10 @@ CompressionCodecs[CompressionTypes.Snappy] = snappyCodec
 // kafkajs implementation of the seam (spec 003; chosen after the Confluent native client
 // crashed Bun on import). kafkajs cannot read without a consumer group, so reads join an
 // ephemeral group with autoCommit off — no offsets are ever committed (spec 009).
+//
+// Auto topic creation is off on every path: kafkajs defaults it to *on* for producers and
+// consumers, and a broker with auto.create.topics.enable would turn a mistyped topic name
+// into a new topic with broker-default partitions (spec 029).
 
 export function createKafkaClient(profile: ClusterProfile, password: string): KafkaClient {
   const kafka = new Kafka({
@@ -166,7 +170,7 @@ export function createKafkaClient(profile: ClusterProfile, password: string): Ka
       )
 
       const groupId = `${EPHEMERAL_GROUP_PREFIX}${Math.random().toString(36).slice(2, 10)}`
-      const consumer = kafka.consumer({ groupId })
+      const consumer = kafka.consumer({ groupId, allowAutoTopicCreation: false })
       consumers.add(consumer)
 
       let delivered = 0
@@ -259,7 +263,7 @@ export function createKafkaClient(profile: ClusterProfile, password: string): Ka
 
     async produce(topic, records: ProduceRecord[]) {
       if (!producer) {
-        producer = kafka.producer()
+        producer = kafka.producer({ allowAutoTopicCreation: false })
         await producer.connect()
       }
       const result = await producer.send({

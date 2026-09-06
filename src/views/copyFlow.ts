@@ -104,8 +104,21 @@ export function copyFlows(deps: CopyFlowDeps): CopyFlows {
       }
       dispatch({ type: "MSGS_COPY_PLANNING" })
       void session(profile)
-        .then((target) =>
-          planCopy({
+        .then(async (target) => {
+          // The producer will not create a topic (spec 029), but the failure it would give
+          // for a missing one arrives after the confirm dialog — checked here, so a typo in
+          // the topic prompt is a refusal naming what was typed, before anything is planned.
+          const exists = await target.client.describeTopic(destTopic.trim()).then(
+            () => true,
+            () => false,
+          )
+          if (!exists) {
+            return {
+              kind: "refused" as const,
+              reason: `no topic "${destTopic.trim()}" on ${profile.name} — topiq does not create topics`,
+            }
+          }
+          return planCopy({
             source: { profile: source.profile, registry: source.registry },
             // A second registry object, so a second schema cache: ids are registry-local,
             // and one cache across both is the bug this spec exists to prevent (spec 016).
@@ -113,8 +126,8 @@ export function copyFlows(deps: CopyFlowDeps): CopyFlows {
             row: copy.row,
             destTopic: destTopic.trim(),
             now,
-          }),
-        )
+          })
+        })
         .then(
           (outcome) => {
             // MSGS_CONFIRM_OPEN closes the bar; every other outcome has to close it itself,

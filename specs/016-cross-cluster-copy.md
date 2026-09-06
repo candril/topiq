@@ -48,7 +48,9 @@ UI's job is to make that distinction explicit rather than silent.
 
 - Bulk mirroring / continuous replication. This is an interactive, bounded copy — use
   MirrorMaker for the other thing.
-- Creating the destination topic or schema.
+- Creating the destination topic or schema. The flow describes the destination topic
+  before planning and refuses when it is missing; the producer itself has auto-creation
+  off ([029](./029-connection-hygiene-and-fetch-latency.md)).
 
 ## Technical Notes
 
