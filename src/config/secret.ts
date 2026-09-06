@@ -1,8 +1,10 @@
 // The only module that touches a secret (nfr/003): run the profile's password_cmd,
 // return trimmed stdout. Never log, never persist.
 
-/** Mask anything token-shaped so a failing az/op command stays diagnosable without leaking. */
-function redact(text: string): string {
+/** Mask anything token-shaped so a failing az/op command stays diagnosable without leaking.
+ *  The Kafka debug sink (spec 029) writes through the same rule, so there is one definition
+ *  of "looks like a secret". */
+export function redact(text: string): string {
   return text.replace(/[A-Za-z0-9+/=_-]{20,}/g, "[redacted]")
 }
 

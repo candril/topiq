@@ -103,6 +103,10 @@ allow_write  = false          # produce and offset writes stay off until you say
 Profiles sharing a `group` are environments of one logical cluster, which is what makes
 "copy this message to the other environment" a single keystroke.
 
+Connecting slowly, or not at all? `TOPIQ_KAFKA_LOG=/tmp/topiq-kafka.log topiq …` appends
+the Kafka client's debug log to that file, secrets redacted, so a stall has a request and a
+timestamp next to it.
+
 ## What it does
 
 - **Peek** — topic list with watermarks, message table with columns inferred from the

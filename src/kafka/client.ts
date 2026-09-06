@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs"
-import { AssignerProtocol, CompressionCodecs, CompressionTypes, Kafka, logLevel } from "kafkajs"
+import { AssignerProtocol, CompressionCodecs, CompressionTypes, Kafka } from "kafkajs"
 import snappyCodec from "kafkajs-snappy"
 import type { Admin, Consumer, Producer, SASLOptions } from "kafkajs"
 import type { ClusterProfile } from "@/config/schema.ts"
@@ -13,6 +13,7 @@ import type {
 import type { ConsumeHandle, ConsumeOptions, KafkaClient, ProduceRecord } from "./types.ts"
 import { groupSeekRefusal } from "./groups.ts"
 import { clientId, ephemeralGroupId, processIdentity } from "./identity.ts"
+import { kafkaLogging } from "./log.ts"
 import { mapLimit } from "./pool.ts"
 import { type FetchRange, type PartitionStart, resolveStarts } from "./range.ts"
 
@@ -44,7 +45,12 @@ export function createKafkaClient(profile: ClusterProfile, password: string): Ka
     // mechanism is the scram-256/512 union needs the assertion — both arms take the
     // same username/password shape.
     sasl: { ...profile.sasl, password } as SASLOptions,
-    logLevel: logLevel.NOTHING,
+    // kafkajs's 1 s default tears down a TLS handshake that is merely slow — a remote
+    // cluster behind a self-signed CA routinely is — and retries with backoff, which shows
+    // up as a random multi-second stall rather than as an error (spec 029).
+    connectionTimeout: 5000,
+    requestTimeout: 30000,
+    ...kafkaLogging(),
   })
 
   let admin: Admin | null = null

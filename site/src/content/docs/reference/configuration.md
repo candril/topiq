@@ -78,3 +78,4 @@ The `group`/`env` pair is what makes topiq understand "this cluster, other envir
 | `EDITOR` | Used for viewing a message, editing before replay, and crafting. Defaults to `vi`. |
 | `TOPIQ_DEMO_EPOCH` | Demo mode only: pins the timestamp anchor (ISO 8601 or epoch millis) so a run is reproducible. |
 | `TOPIQ_DEMO_LATENCY` | Demo mode only: `0` removes the simulated round-trip delays. |
+| `TOPIQ_KAFKA_LOG` | Path of a file to append the Kafka client's debug log to — every request, response and group step, with anything token-shaped redacted. Off when unset. Never the terminal: that is the TUI. |
