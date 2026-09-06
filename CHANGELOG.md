@@ -7,30 +7,6 @@ release, so write it before tagging.
 
 ## [Unreleased]
 
-### Fixed
-
-- A window on a transactional topic no longer sits on "loading" forever: the end of a
-  partition is now read off the fetch, and the commit marker at the tail — which the
-  client filters out before delivery — no longer hides it.
-- The producer and consumer can no longer create a topic. A mistyped cross-cluster copy
-  destination is refused by name instead of being created with broker defaults on a
-  cluster that allows auto-creation.
-
-### Changed
-
-- Every request now carries `client.id = topiq/<user>@<host>`, and topiq's ephemeral
-  reader groups are `topiq-read-<user>-<random>`, so a broker log or lag dashboard says
-  who connected.
-- The consumer-group pane describes all groups in one request and reads the topic's
-  watermarks once instead of once per group.
-- Connection timeout raised from kafkajs's 1 s default to 5 s; request timeout set
-  explicitly to 30 s.
-
-### Added
-
-- `TOPIQ_KAFKA_LOG=<path>` appends the Kafka client's debug log to a file, with anything
-  token-shaped redacted.
-
 ## [0.1.0] - 2026-09-06
 
 First release. Read-only paths are exercised against a live cluster; every write path is
@@ -61,6 +37,30 @@ built and unit-tested but has not yet produced a byte to a real broker.
 - **Docs** — a site at candril.github.io/topiq, with every screenshot and the README gif
   generated from the demo cluster by `just shots` / `just demo-gif`.
 - The message window is newest first; `g` is the live edge while following.
+
+### Fixed
+
+- A window on a transactional topic no longer sits on "loading" forever: the end of a
+  partition is now read off the fetch, and the commit marker at the tail — which the
+  client filters out before delivery — no longer hides it.
+- The producer and consumer can no longer create a topic. A mistyped cross-cluster copy
+  destination is refused by name instead of being created with broker defaults on a
+  cluster that allows auto-creation.
+
+### Changed
+
+- Every request now carries `client.id = topiq/<user>@<host>`, and topiq's ephemeral
+  reader groups are `topiq-read-<user>-<random>`, so a broker log or lag dashboard says
+  who connected.
+- The consumer-group pane describes all groups in one request and reads the topic's
+  watermarks once instead of once per group.
+- Connection timeout raised from kafkajs's 1 s default to 5 s; request timeout set
+  explicitly to 30 s.
+
+### Added
+
+- `TOPIQ_KAFKA_LOG=<path>` appends the Kafka client's debug log to a file, with anything
+  token-shaped redacted.
 
 [Unreleased]: https://github.com/candril/topiq/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/candril/topiq/releases/tag/v0.1.0
