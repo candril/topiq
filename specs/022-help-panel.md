@@ -42,6 +42,15 @@ to serve only the first week of use.
 - The transient status line from [001](./001-app-shell.md) — that surfaces async results
   and errors, appears only when it has something to say, and is not a keyboard-hint bar.
 
+## Decisions (as built)
+
+- **The panel fits the terminal in both axes.** `helpColumns` splits sections into columns
+  by height; `fitDescription` then cuts each description with an ellipsis so those columns
+  fit the width. Without the second step a 140-column terminal at 42 rows gets three
+  columns wider than the screen, the layout centres the overflow, and the *key* column —
+  the whole point of the panel — is what gets clipped. Found by the screenshot pipeline
+  ([028](./028-docs-screenshots-and-gif.md)), which is the kind of thing it exists to find.
+
 ## Technical Notes
 
 - Reuses the overlay/dialog pattern shared with the palette and confirm dialog — one

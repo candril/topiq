@@ -1,0 +1,52 @@
+# Screenshot recipes: name | keys, sent to a fresh `topiq --demo` (see docs/screenshots.md).
+# Keys are tmux send-keys tokens: a letter, a string, Enter, Escape, Space, C-p …;
+# `wait` pauses for a background load.
+# The demo opens connected to demo-test, on the topic list, cursor on the first topic
+# (customers.updated.v1). `j Enter wait` opens orders.placed.v2 — the main topic.
+
+# ── Topics ────────────────────────────────────────────────────────────────────
+topics           |
+topics-partitions| j p
+topics-internal  | i
+topics-filter    | / order
+clusters         | Escape
+prod             | Escape j Enter wait
+
+# ── Table ─────────────────────────────────────────────────────────────────────
+table            | j Enter wait
+columns          | j Enter wait c
+sort             | j Enter wait l l l l s
+hide             | j Enter wait l l -
+latest-n         | j Enter wait n
+from-timestamp   | j Enter wait t
+subtypes         | j j Enter wait
+decode-failed    | Enter wait G
+
+# ── Filter ────────────────────────────────────────────────────────────────────
+filter           | j Enter wait / value.customer.tier:PRO
+filter-suggest   | j Enter wait / value.cus
+filter-cell      | j Enter wait l l l l l *
+js-filter        | j Enter wait =
+
+# ── Follow ────────────────────────────────────────────────────────────────────
+follow           | j Enter wait f wait wait
+follow-paused    | j Enter wait f wait Space
+
+# ── Replay ────────────────────────────────────────────────────────────────────
+replay           | j Enter wait p
+replayed         | j Enter wait p R wait
+# From prod: the copy goes prod → test, the only direction with a writable destination.
+copy             | Escape j Enter wait j Enter wait y
+copy-confirm     | Escape j Enter wait j Enter wait y Enter Enter wait
+
+# ── Groups ────────────────────────────────────────────────────────────────────
+groups           | j c wait
+group-partitions | j c wait p
+group-members    | j c wait j j m
+seek             | j c wait o
+seek-resolved    | j c wait o l Enter wait
+seek-refused     | j c wait j j o Enter wait
+
+# ── Everywhere ────────────────────────────────────────────────────────────────
+palette          | j Enter wait C-p
+help             | ?

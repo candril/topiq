@@ -75,6 +75,32 @@ release version:
     @echo "tagged v{{version}} at $(git rev-parse --short HEAD)"
     @echo "publish it with: git push origin v{{version}}"
 
+# Run the offline demo cluster (spec 027) — no config, no broker, writes stay in memory
+demo *args:
+    bun src/index.tsx --demo {{args}}
+
+# Open the demo for screenshots: isolated state, fixed version label, pinned clock
+shot:
+    XDG_CACHE_HOME=/tmp/topiq-shot/cache XDG_STATE_HOME=/tmp/topiq-shot/state \
+    XDG_CONFIG_HOME=/tmp/topiq-shot/config TOPIQ_DEMO_EPOCH=$(date -u +%Y-%m-%dT%H:00:00Z) \
+    bun --define 'TOPIQ_VERSION="0.1.0"' src/index.tsx --demo
+
+# Take every docs screenshot from the demo cluster, unattended (tmux + python3/Pillow)
+shots *names:
+    bash scripts/shots.sh {{names}}
+
+# Record the README demo gif from the demo cluster, unattended (tmux + python3/Pillow)
+demo-gif:
+    bash scripts/demo.sh
+
+# Run the documentation site locally
+site-dev:
+    cd site && bun run dev
+
+# Build the documentation site
+site-build:
+    cd site && bun run build
+
 # Live smoke test against a real cluster: just smoke <profile> <topic> [n] (needs az login)
 #
 # Profile, topic and CA all come from ~/.config/topiq/config.toml — the repo is public and

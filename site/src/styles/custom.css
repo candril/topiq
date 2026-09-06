@@ -1,0 +1,18 @@
+/* Tokyo Night — the palette the app itself renders in (src/theme.ts). */
+:root {
+  --sl-color-accent-low: #1b2440;
+  --sl-color-accent: #7aa2f7;
+  --sl-color-accent-high: #c8d8ff;
+}
+
+:root[data-theme='light'] {
+  --sl-color-accent-low: #e3ebfd;
+  --sl-color-accent: #3b5fc0;
+  --sl-color-accent-high: #1d2c5e;
+}
+
+/* Table sketches are drawn as box-art in code blocks; keep them tight so a
+   fifty-row window doesn't scroll off on a laptop. */
+.table-sketch pre {
+  line-height: 1.25;
+}

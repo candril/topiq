@@ -1,0 +1,27 @@
+# The README demo: hold | keys | keycap | caption. Rendered by `just demo-gif`
+# (scripts/demo.sh). `hold` is seconds, or `auto` to let the caption's word count set the
+# dwell — prefer `auto`, and spend an explicit number only where a frame needs to breathe.
+#
+# The keycap and caption are drawn on a panel low over the frame. Give every step a
+# caption: a step without one drops the panel, and it reads as a glitch. Keep captions
+# short — every word is dwell time, and a minute is already a long loop.
+#
+# A step whose keys are only cursor keys (j k g G) gets the row under the cursor ringed
+# and an arrow from where it came. Fold `Escape` into the next step's keys instead of
+# spending a frame on it — and count them: on the filter bar one `Escape` clears and
+# closes, a second leaves the topic.
+#
+# Starts connected to demo-test, on the topic list.
+
+3.5  |                                  |      | a Kafka cluster from the terminal — topics, partitions, watermarks
+auto | j Enter wait                     | ↵    | open a topic: the latest 50, newest first, columns inferred from the payload
+auto | l l l                            | h l  | walk the columns. ids above 2^53 are exact — every long is a BigInt
+auto | / value.customer.tier:PRO        | /    | filter the window: field:value, ranges, regex, nested fields
+auto | Escape f wait wait               | f    | follow the tail — arrivals land at the top, the buffer stays bounded
+auto | p                                | p    | replay the newest message, still following: the same bytes, byte for byte
+auto | R wait                           | ⇧R   | it lands in the tail with a new offset. nothing decoded, nothing re-encoded
+auto | y                                | y    | or copy to another cluster — decoded here, re-encoded there. prod never leads
+auto | Escape Escape c wait             | c    | consumer groups: state, members, lag. undefined lag is —, never 0
+auto | o l Enter wait                   | o    | move a group's offsets — only an Empty group, only after a typed confirm
+auto | Escape Escape C-p                | ^P   | every action for this screen, with its key
+5.0  | Escape ?                         | ?    | the whole keymap. nothing has to be memorised

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { helpColumns, type HelpSection } from "./HelpPanel.tsx"
+import { fitDescription, helpColumns, type HelpSection } from "./HelpPanel.tsx"
 
 const section = (name: string, rows: number): HelpSection => [
   name,
@@ -43,5 +43,24 @@ describe("helpColumns", () => {
       const columns = helpColumns([section("a", 3), section("b", 3)], height)
       expect(columns.every((c) => c.length > 0)).toBe(true)
     }
+  })
+})
+
+describe("fitDescription", () => {
+  test("leaves a description alone when the columns fit the terminal", () => {
+    expect(fitDescription("follow the tail", 3, 200)).toBe("follow the tail")
+  })
+
+  test("cuts with an ellipsis so three columns fit 140 cells", () => {
+    const desc = "+? total is a floor: some partition uncommitted and more words"
+    const cut = fitDescription(desc, 3, 140)
+    expect(cut.length).toBeLessThan(desc.length)
+    expect(cut.endsWith("…")).toBe(true)
+    // 140 − 6 padding − 8 gaps = 126 → 42 per column − 12 key = 30
+    expect(cut.length).toBe(30)
+  })
+
+  test("never cuts below a readable minimum — a narrow terminal keeps the words", () => {
+    expect(fitDescription("half page down / up", 3, 60)).toBe("half page down / up")
   })
 })

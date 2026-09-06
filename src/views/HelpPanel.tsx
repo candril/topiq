@@ -156,8 +156,25 @@ export function helpColumns(sections: readonly HelpSection[], height: number): H
   return columns
 }
 
+/** Key column plus the two-space indent — the fixed part of every binding row. */
+const KEY_WIDTH = 12
+const COLUMN_GAP = 4
+const PANEL_PADDING = 3
+
+/** Cut a description so `n` columns fit `width`. The alternative — a panel wider than the
+ *  terminal — is centred by the layout and clipped on *both* sides, and the first thing
+ *  cut is the key column, which is the whole point of the panel. */
+export function fitDescription(desc: string, columns: number, width: number): string {
+  const available = width - 2 * PANEL_PADDING - COLUMN_GAP * (columns - 1)
+  const max = Math.floor(available / columns) - KEY_WIDTH
+  if (max < 8 || desc.length <= max) {
+    return desc
+  }
+  return `${desc.slice(0, max - 1)}…`
+}
+
 export function HelpPanel() {
-  const { height } = useTerminalDimensions()
+  const { height, width } = useTerminalDimensions()
   const columns = helpColumns(GROUPS, height)
   return (
     <box
@@ -171,11 +188,16 @@ export function HelpPanel() {
       // stale cells behind when it closes, which reads as a corrupted screen.
       backgroundColor={theme.bg}
     >
-      <box flexDirection="column" backgroundColor={theme.modalBg} paddingX={3} paddingY={1}>
+      <box
+        flexDirection="column"
+        backgroundColor={theme.modalBg}
+        paddingX={PANEL_PADDING}
+        paddingY={1}
+      >
         <text fg={theme.text}>
           <strong>Help</strong>
         </text>
-        <box flexDirection="row" gap={4}>
+        <box flexDirection="row" gap={COLUMN_GAP}>
           {columns.map((column, i) => (
             <box key={i} flexDirection="column">
               {column.map(([area, bindings]) => (
@@ -183,8 +205,8 @@ export function HelpPanel() {
                   <text fg={theme.secondary}>{area}</text>
                   {bindings.map(([key, desc]) => (
                     <box key={key} flexDirection="row">
-                      <text fg={theme.primary}>{`  ${key}`.padEnd(12)}</text>
-                      <text fg={theme.textDim}>{desc}</text>
+                      <text fg={theme.primary}>{`  ${key}`.padEnd(KEY_WIDTH)}</text>
+                      <text fg={theme.textDim}>{fitDescription(desc, columns.length, width)}</text>
                     </box>
                   ))}
                 </box>

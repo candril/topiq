@@ -1,6 +1,6 @@
 # Docs Screenshots, Demo Gif & Site
 
-**Status**: Draft — blocked on [027](./027-demo-mode.md)
+**Status**: In Progress — P1 built: pipeline, 32 screenshots, the gif, the site; P2 not started
 
 ## Description
 
@@ -48,16 +48,15 @@ The site is Astro + Starlight on GitHub Pages, as `lane` and `monq` have.
   find is a pipeline that gets bypassed with a hand screenshot of a real cluster.
 - **`just shot`**, **`just shots [names]`**, **`just demo-gif`** — the recipes, matching
   lane's names so the muscle memory transfers.
-- **`site/`** — Astro + Starlight, one `index.mdx` for now, screenshots and the gif from
-  `src/assets/`, `logo` in `public/`. **`.github/workflows/deploy-site.yml`** deploys to
+- **`site/`** — Astro + Starlight: a splash `index.mdx`, a guide (installation, getting
+  started) and a reference page per area (key bindings, peek & filter, replay, groups,
+  configuration, CLI), screenshots and the gif from `src/assets/`, `logo` in `public/`. **`.github/workflows/deploy-site.yml`** deploys to
   GitHub Pages on a push that touches `site/**`.
 - **`README.md`** embeds the gif and links the site.
 
 ### P2 — Should Have
 
-- A **feature page per area** on the site (peek, filter, replay, groups, safety, config),
-  each with its screenshots — lane's single-page shape is fine to start, but topiq has
-  more surface than fits one scroll.
+- ~~A **feature page per area** on the site.~~ Built in P1: six reference pages.
 - **A CI job that regenerates the shots** and fails if any PNG differs from the committed
   one. Drift becomes a red check instead of a stale image. Needs a Linux Menlo substitute
   or a committed font, so this is real work, not a `run:` line.
@@ -111,9 +110,9 @@ The site is Astro + Starlight on GitHub Pages, as `lane` and `monq` have.
 
 ## Open Questions
 
-- **Half-size gif or full?** lane renders the gif at half size to keep the README light;
-  topiq's table is denser than a board and may need full size to stay legible. Decide by
-  looking at the first render, not in advance.
+- ~~**Half-size gif or full?**~~ **Resolved:** half size, as lane. The table's 30px cells
+  render at 15px in the gif, which is still legible on a README; full size would be tens
+  of megabytes.
 - **How long is the tour?** lane's is 14 steps and already "a long loop for a README".
   topiq has more to show (peek → filter → replay → tail → groups). Either one longer gif,
   or a short README gif plus per-page gifs on the site. Resolve after the first cut.

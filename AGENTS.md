@@ -83,6 +83,13 @@ errors before considering work done.
 > afterwards so a broken install fails loudly instead of at your next launch.
 | `just smoke <profile> <topic>` | Live consume against a real cluster from your local config |
 | `just release <version>` | Check, tag `v<version>`; pushing the tag builds and publishes ([026](./specs/026-release-and-distribution.md)) |
+| `just demo` | The offline demo cluster ([027](./specs/027-demo-mode.md)) — no config, no broker |
+| `just shots` / `just demo-gif` | Regenerate every docs screenshot / the README gif from the demo ([028](./specs/028-docs-screenshots-and-gif.md), `docs/screenshots.md`) |
+| `just site-dev` / `just site-build` | The Astro/Starlight docs site under `site/` |
+
+**Screenshots and the gif come from `--demo` only.** Never point `scripts/shots.sh` or
+`scripts/demo.sh` at a real cluster: a real broker name or payload in a PNG cannot be
+grepped out later. If the demo cannot show something, extend `src/demo/seed.ts`.
 
 ## Publishing
 

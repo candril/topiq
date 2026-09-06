@@ -71,7 +71,7 @@ lifecycle, prioritisation, Open Questions, and cross-linking.
 | 025 | [Loading Indicators](./025-loading-indicators.md) | In Progress | Full-pane spinner + rotating flavour for connect and topic list; inline spinner only for a message window |
 | 026 | [Release & Distribution](./026-release-and-distribution.md) | In Progress | `v*` tag → per-platform binaries + `SHA256SUMS` → GitHub Release; `curl \| bash` installer; brew tap and flake on top |
 | 027 | [Demo Mode](./027-demo-mode.md) | In Progress | `topiq --demo`: an offline seeded cluster behind the seam, writes enabled; two profiles (test writable, prod refusing) |
-| 028 | [Docs Screenshots, Demo Gif & Site](./028-docs-screenshots-and-gif.md) | Draft | lane's tmux + Pillow pipeline over `--demo`; Astro/Starlight site on Pages |
+| 028 | [Docs Screenshots, Demo Gif & Site](./028-docs-screenshots-and-gif.md) | In Progress | lane's tmux + Pillow pipeline over `--demo`; Astro/Starlight site on Pages |
 
 ## NFR Specs
 
@@ -182,6 +182,11 @@ lifecycle, prioritisation, Open Questions, and cross-linking.
   cluster behind the seam (`src/demo/`), two profiles, writes enabled on `demo-test`, live
   arrivals while following, pinned by `TOPIQ_DEMO_EPOCH`. Verified by 24 unit tests and a
   tmux-driven session; P3 (no-config fallback, faults on demand) not started.
+- **Docs** ([028](./028-docs-screenshots-and-gif.md)): P1 built — lane's tmux + Pillow
+  pipeline ported (`scripts/render-shot.py`, `shots.sh`, `demo.sh`), 32 recipes in
+  `docs/shots.txt`, the README gif from `docs/demo.txt`, an Astro/Starlight site under
+  `site/` with a Pages deploy. Every frame comes from `--demo`. P2 (drift check in CI,
+  per-area pages) not started.
 - **Draft**: everything else.
 - **Next**: a live TUI session against the test cluster with `allow_write = true` — the only
   thing that can turn "built" into "verified" for milestones 4 and 5. Then

@@ -30,6 +30,13 @@ built and unit-tested but has not yet produced a byte to a real broker.
 - **Config** — TOML cluster profiles with `password_cmd`, so no secret is ever written to
   disk; `group`/`env` model a cluster family across environments.
 - Command palette (`^p`), help panel (`?`), and column navigation with type-aware sort.
+- **Demo mode** — `topiq --demo` opens a seeded in-memory cluster behind the same client
+  seam: real Avro behind real schema ids, keys above 2^53, a tombstone, a decode failure,
+  seeded consumer groups, live arrivals while following. Writes work and are forgotten on
+  exit. No config, no network.
+- **Docs** — a site at candril.github.io/topiq, with every screenshot and the README gif
+  generated from the demo cluster by `just shots` / `just demo-gif`.
+- The message window is newest first; `g` is the live edge while following.
 
 [Unreleased]: https://github.com/candril/topiq/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/candril/topiq/releases/tag/v0.1.0
