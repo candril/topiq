@@ -9,7 +9,7 @@ import type { ConsumerGroupMeta, GroupOverview, PartitionOffset } from "@/types.
 
 /** Prefix of the ephemeral groups topiq's own reads join (spec 009). kafkajs cannot read
  *  without a group, so every window leaves one behind — our litter, not the user's
- *  consumers, so the list hides them unless asked. `client.ts` builds ids from this
+ *  consumers, so the list hides them unless asked. `identity.ts` builds ids from this
  *  constant so the filter cannot drift from the generator. */
 export const EPHEMERAL_GROUP_PREFIX = "topiq-read-"
 

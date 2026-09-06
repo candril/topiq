@@ -79,12 +79,13 @@ could scroll. Asking for the open pane closes it.
   propagates to the total: an uncommitted partition is **counted**, never summed as zero,
   and the total is marked `+?` to say it is a floor.
 - **topiq's own reader groups are hidden by default.** kafkajs cannot read without a
-  consumer group, so every window topiq opens joins an ephemeral `topiq-read-<random>`
-  group with autoCommit off ([003](./003-kafka-client-seam.md),
-  [009](./009-paging-and-fetch-modes.md)). Those are our litter, not the user's consumers:
-  on a topic that has been peeked at all day they would bury the real ones. `e` reveals
-  them, dimmed. `src/kafka/groups.ts` owns the prefix constant and `client.ts` builds the
-  ids from it, so the filter cannot drift from the generator.
+  consumer group, so every window topiq opens joins an ephemeral
+  `topiq-read-<os user>-<random>` group with autoCommit off
+  ([003](./003-kafka-client-seam.md), [009](./009-paging-and-fetch-modes.md),
+  [029](./029-connection-hygiene-and-fetch-latency.md)). Those are our litter, not the
+  user's consumers: on a topic that has been peeked at all day they would bury the real
+  ones. `e` reveals them, dimmed. `src/kafka/groups.ts` owns the prefix constant and
+  `identity.ts` builds the ids from it, so the filter cannot drift from the generator.
 - **Two-phase load.** The listing is one round-trip; lag costs a committed-offset fetch
   *per group*, run at a concurrency of 8. The list paints on the listing and lag fills in
   after — one combined await would leave the view blank for as long as the slowest group

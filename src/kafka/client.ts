@@ -11,7 +11,8 @@ import type {
   TopicSummary,
 } from "@/types.ts"
 import type { ConsumeHandle, ConsumeOptions, KafkaClient, ProduceRecord } from "./types.ts"
-import { EPHEMERAL_GROUP_PREFIX, groupSeekRefusal } from "./groups.ts"
+import { groupSeekRefusal } from "./groups.ts"
+import { clientId, ephemeralGroupId, processIdentity } from "./identity.ts"
 import { mapLimit } from "./pool.ts"
 import { type FetchRange, type PartitionStart, resolveStarts } from "./range.ts"
 
@@ -33,8 +34,9 @@ CompressionCodecs[CompressionTypes.Snappy] = snappyCodec
 // into a new topic with broker-default partitions (spec 029).
 
 export function createKafkaClient(profile: ClusterProfile, password: string): KafkaClient {
+  const identity = processIdentity()
   const kafka = new Kafka({
-    clientId: "topiq",
+    clientId: clientId(identity),
     brokers: profile.brokers,
     ssl: profile.caCert ? { ca: [readFileSync(profile.caCert, "utf8")] } : true,
     // kafkajs discriminates SASLOptions on the mechanism *literal*, so a profile whose
@@ -169,7 +171,7 @@ export function createKafkaClient(profile: ClusterProfile, password: string): Ka
           .map((s) => s.partition),
       )
 
-      const groupId = `${EPHEMERAL_GROUP_PREFIX}${Math.random().toString(36).slice(2, 10)}`
+      const groupId = ephemeralGroupId(identity)
       const consumer = kafka.consumer({ groupId, allowAutoTopicCreation: false })
       consumers.add(consumer)
 
