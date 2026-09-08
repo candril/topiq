@@ -1,0 +1,35 @@
+# Generated from candril/homebrew-tap/templates/site-ci.yml; edit it there.
+#
+# The docs site is a separate project from the app, with its own package.json and lockfile,
+# and nothing else builds it on a pull request: deploy-site.yml only runs on pushes to main.
+# Without this, a dependency bump under site/ has no signal until it has already landed.
+#
+# `--frozen-lockfile` is the point as much as the build is: it fails when package.json and
+# bun.lock disagree, which is exactly how a half-applied dependency update arrives.
+name: 🧱 Site build
+
+on:
+  pull_request:
+    paths:
+      - 'site/**'
+      - '.github/workflows/site-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build
+        run: bun run build
