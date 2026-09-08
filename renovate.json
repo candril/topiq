@@ -1,0 +1,5 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Policy lives in candril/homebrew-tap/default.json, shared by all five tools. Change it there, not here.",
+  "extends": ["github>candril/homebrew-tap"]
+}
