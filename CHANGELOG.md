@@ -7,6 +7,19 @@ release, so write it before tagging.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-09
+
+### Added
+
+- Scan mode: `shift+S` streams the whole range through the filter and keeps only the hits,
+  so a topic can be searched past the 10,000-row window. Latest-N scans from the beginning;
+  offset and timestamp ranges scan from where they start. The header shows progress against
+  the watermarks, throughput, and how the scan ended — end, stopped, capped at 10,000 hits,
+  or failed. `shift+S` again stops a running scan or re-runs a finished one; `esc` returns to
+  the window and keeps the filter.
+- The client seam's consume callback may return a promise; the kafkajs client then waits
+  before fetching more, so a scan applies backpressure instead of dropping rows.
+
 ## [0.1.1] - 2026-09-06
 
 ### Added
