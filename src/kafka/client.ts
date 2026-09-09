@@ -241,7 +241,7 @@ export function createKafkaClient(profile: ClusterProfile, password: string): Ka
       void consumer
         .run({
           autoCommit: false,
-          eachBatch: async ({ batch }) => {
+          eachBatch: async ({ batch, heartbeat }) => {
             const { partition } = batch
             // Following, every scoped partition stays open: `pending` only tracks which of
             // them still has history to read, and a tail starts with none of them there.
@@ -261,7 +261,7 @@ export function createKafkaClient(profile: ClusterProfile, password: string): Ka
                 continue
               }
               delivered++
-              onMessage({
+              const wait = onMessage({
                 topic,
                 partition,
                 offset,
@@ -270,6 +270,14 @@ export function createKafkaClient(profile: ClusterProfile, password: string): Ka
                 value: message.value,
                 headers: normalizeHeaders(message.headers),
               })
+              if (wait !== undefined) {
+                // Backpressure (spec 030): the caller cannot keep up, so the fetch waits
+                // here instead of the caller growing a queue. Heartbeat afterwards — a
+                // member silent past the session timeout is evicted and re-seated at the
+                // group's default position, which would hole the read without a word.
+                await wait
+                await heartbeat()
+              }
             }
             if (delivered >= opts.limit) {
               resolveDone()

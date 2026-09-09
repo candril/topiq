@@ -68,6 +68,14 @@ the topic contained. `space` pauses without disconnecting.
 
 ![Following a topic](../../assets/screenshots/follow.png)
 
+## Scan past the window
+
+A window holds 10,000 rows at most, and the filter narrows that. `⇧S` turns it around:
+every message in the range streams through the filter and only the hits are kept, so
+"the order with this id, somewhere in the last four million" is one keystroke after `b`.
+The header shows how far the scan got and how fast; `⇧S` again stops it, `esc` returns to
+the window. Nothing is dropped on the way — when decoding falls behind, the fetch waits.
+
 ## Replay a message — the same bytes
 
 `p` re-produces the message under the cursor to its own topic: the raw key, value and

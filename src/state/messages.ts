@@ -1,4 +1,5 @@
 import { JS_PREFIX } from "@/views/filterBarModel.ts"
+import { scanRange } from "@/table/scan.ts"
 import { cycleSort, UNSORTED } from "@/table/sort.ts"
 import type { MessageFollowState, MessagesState, SubReducer } from "./types.ts"
 
@@ -22,6 +23,7 @@ export function initialMessagesState(): MessagesState {
     sort: UNSORTED,
     filter: { query: "", active: false },
     follow: NOT_FOLLOWING,
+    scan: null,
     confirm: null,
     confirmTyped: "",
     copy: null,
@@ -136,7 +138,7 @@ export const messagesReducer: SubReducer = (state, action) => {
       // The filter survives: it is a question about the data, not about the window, and
       // re-typing it after every range change is the whole workflow (spec 010).
       // Follow does not survive: it tails the end of *this* window, and a new range means
-      // a new end (spec 012).
+      // a new end (spec 012). Nor does a scan: it read a range this one replaces (spec 030).
       return {
         ...state,
         mode: action.range.kind,
@@ -151,6 +153,7 @@ export const messagesReducer: SubReducer = (state, action) => {
           sort: UNSORTED,
           filter: m.filter,
           follow: NOT_FOLLOWING,
+          scan: null,
           confirm: null,
           confirmTyped: "",
           copy: null,
@@ -213,15 +216,43 @@ export const messagesReducer: SubReducer = (state, action) => {
     case "MSGS_FOLLOW_TOGGLE":
       // Turning follow on pins the cursor to the newest row and starts unpaused; turning
       // it off drops the tail buffer and returns to the fetched window — `space` is the
-      // way to freeze the tail without losing it (spec 012).
+      // way to freeze the tail without losing it (spec 012). A tail and a scan cannot share
+      // the screen, so turning follow on ends a scan (spec 030).
       return {
         ...state,
         messages: {
           ...m,
           cursor: 0,
           follow: m.follow.active ? NOT_FOLLOWING : { active: true, paused: false, pinned: true },
+          scan: m.follow.active ? m.scan : null,
         },
       }
+    case "MSGS_SCAN_START":
+      // A scan without a filter is a bigger window, and the cap ends that at the same
+      // 10,000 rows — refused here, explained by the view (spec 030).
+      if (m.filter.query === "") {
+        return state
+      }
+      return {
+        ...state,
+        messages: {
+          ...m,
+          cursor: 0,
+          follow: NOT_FOLLOWING,
+          scan: {
+            range: scanRange(m.range),
+            query: m.filter.query,
+            run: (m.scan?.run ?? 0) + 1,
+            stopped: false,
+          },
+        },
+      }
+    case "MSGS_SCAN_STOP":
+      return m.scan === null || m.scan.stopped
+        ? state
+        : { ...state, messages: { ...m, scan: { ...m.scan, stopped: true } } }
+    case "MSGS_SCAN_CLOSE":
+      return m.scan === null ? state : { ...state, messages: { ...m, cursor: 0, scan: null } }
     case "MSGS_CONFIRM_OPEN":
       // The copy bar closes as its dialog opens: the destination is decided, and leaving a
       // list of other destinations under a modal that names one would be two answers to the

@@ -62,6 +62,18 @@ Rows are newest first; `g` is the live edge.
 | `space` | pause / resume — the consumer stays connected |
 | `g` | rejoin the newest row after scrolling away |
 
+## Scan
+
+| Keys | Action |
+| --- | --- |
+| `shift+S` | scan the whole range with the filter — needs a filter; latest N scans from the beginning |
+| `shift+S` again | stop while it runs; re-run once it has finished |
+| `esc` | leave the hits and return to the window, keeping the filter |
+
+A scan streams every message in the range through the filter and keeps only the hits, so
+the range can be the whole topic. Hits stop at the window cap; the header shows how far the
+scan got, how fast, and whether it ended, was stopped, or hit the cap.
+
 ## Filter
 
 | Keys | Action |

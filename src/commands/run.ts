@@ -72,6 +72,10 @@ export function runCommand(id: CommandId, actions: CommandActions): void {
       return dispatch({ type: "MSGS_FOLLOW_TOGGLE" })
     case "fetch.followPause":
       return dispatch({ type: "MSGS_FOLLOW_PAUSE_TOGGLE" })
+    case "fetch.scan":
+      return run(view.scan)
+    case "fetch.scanClose":
+      return dispatch({ type: "MSGS_SCAN_CLOSE" })
     case "fetch.columns":
       return dispatch({ type: "MSGS_COLUMNS_OPEN" })
     case "fetch.sortColumn":

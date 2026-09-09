@@ -51,10 +51,13 @@ export interface KafkaClient {
    *  connection) still surfaces. */
   fetchWatermarks(names: string[]): Promise<TopicMeta[]>
   describeTopic(name: string): Promise<TopicMeta>
+  /** `onMessage` may return a promise to ask the fetch to wait — backpressure for a read
+   *  that must not drop (spec 030). The kafkajs client awaits it per message; the demo
+   *  client's log is already in memory, so it has nothing to hold back and ignores it. */
   consume(
     topic: string,
     opts: ConsumeOptions,
-    onMessage: (m: RawMessage) => void,
+    onMessage: (m: RawMessage) => void | Promise<void>,
   ): Promise<ConsumeHandle>
   /** Raw bytes in, raw bytes out — the produce path never decodes (spec 013). */
   produce(topic: string, records: ProduceRecord[]): Promise<{ partition: number; offset: bigint }[]>

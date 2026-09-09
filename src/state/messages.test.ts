@@ -57,6 +57,7 @@ describe("messagesReducer", () => {
       prompt: null,
       filter: { query: "", active: false },
       follow: { active: false, paused: false, pinned: false },
+      scan: null,
       confirmTyped: "",
       column: 0,
       copy: null,
@@ -443,5 +444,71 @@ describe("cross-cluster copy bar", () => {
     let state = opened()
     state = appReducer(state, { type: "MSGS_SET_RANGE", range: { kind: "beginning" } })
     expect(state.messages.copy).toBeNull()
+  })
+})
+
+describe("scan mode (spec 030)", () => {
+  test("a scan needs a filter: without one the start is refused unchanged", () => {
+    const state = createInitialState()
+    expect(appReducer(state, { type: "MSGS_SCAN_START" })).toBe(state)
+  })
+
+  test("starting records the query, scans latest-N from the beginning and ends a tail", () => {
+    let state = appReducer(createInitialState(), { type: "MSGS_FOLLOW_TOGGLE" })
+    state = withFilter(state, "key:42")
+    state = appReducer(state, { type: "MSGS_SCAN_START" })
+    expect(state.messages.scan).toEqual({
+      range: { kind: "beginning" },
+      query: "key:42",
+      run: 1,
+      stopped: false,
+    })
+    expect(state.messages.follow.active).toBe(false)
+    expect(state.messages.cursor).toBe(0)
+  })
+
+  test("every other range scans as it stands", () => {
+    let state = appReducer(createInitialState(), {
+      type: "MSGS_SET_RANGE",
+      range: { kind: "offset", offset: 7n },
+    })
+    state = withFilter(state, "x")
+    state = appReducer(state, { type: "MSGS_SCAN_START" })
+    expect(state.messages.scan?.range).toEqual({ kind: "offset", offset: 7n })
+  })
+
+  test("stop keeps the scan, marks it stopped, and is idempotent", () => {
+    let state = withFilter(createInitialState(), "x")
+    state = appReducer(state, { type: "MSGS_SCAN_START" })
+    const stopped = appReducer(state, { type: "MSGS_SCAN_STOP" })
+    expect(stopped.messages.scan?.stopped).toBe(true)
+    expect(stopped.messages.scan?.query).toBe("x")
+    expect(appReducer(stopped, { type: "MSGS_SCAN_STOP" })).toBe(stopped)
+  })
+
+  test("starting again bumps the run so the same query restarts", () => {
+    let state = withFilter(createInitialState(), "x")
+    state = appReducer(state, { type: "MSGS_SCAN_START" })
+    state = appReducer(state, { type: "MSGS_SCAN_STOP" })
+    state = appReducer(state, { type: "MSGS_SCAN_START" })
+    expect(state.messages.scan).toMatchObject({ run: 2, stopped: false })
+  })
+
+  test("close drops the scan and keeps the filter", () => {
+    let state = withFilter(createInitialState(), "x")
+    state = appReducer(state, { type: "MSGS_SCAN_START" })
+    state = appReducer(state, { type: "MSGS_SCAN_CLOSE" })
+    expect(state.messages.scan).toBeNull()
+    expect(state.messages.filter.query).toBe("x")
+    expect(appReducer(state, { type: "MSGS_SCAN_CLOSE" })).toBe(state)
+  })
+
+  test("a new range or a tail ends the scan", () => {
+    let state = withFilter(createInitialState(), "x")
+    state = appReducer(state, { type: "MSGS_SCAN_START" })
+    expect(
+      appReducer(state, { type: "MSGS_SET_RANGE", range: { kind: "beginning" } }).messages.scan,
+    ).toBeNull()
+    expect(appReducer(state, { type: "MSGS_FOLLOW_TOGGLE" }).messages.scan).toBeNull()
   })
 })

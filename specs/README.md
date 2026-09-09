@@ -73,6 +73,7 @@ lifecycle, prioritisation, Open Questions, and cross-linking.
 | 027 | [Demo Mode](./027-demo-mode.md) | In Progress | `topiq --demo`: an offline seeded cluster behind the seam, writes enabled; two profiles (test writable, prod refusing) |
 | 028 | [Docs Screenshots, Demo Gif & Site](./028-docs-screenshots-and-gif.md) | In Progress | lane's tmux + Pillow pipeline over `--demo`; Astro/Starlight site on Pages |
 | 029 | [Connection Hygiene & Fetch Latency](./029-connection-hygiene-and-fetch-latency.md) | In Progress | Never create a topic, attributable ids, end-of-partition from the fetch, one describe per group list, `TOPIQ_KAFKA_LOG`; group-free reads pending |
+| 030 | [Scan Mode](./030-scan-mode.md) | In Progress | `shift+S` streams a whole range through the filter and keeps only the hits; progress, stop, a stated cap, backpressure on the seam |
 
 ## NFR Specs
 

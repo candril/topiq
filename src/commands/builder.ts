@@ -85,6 +85,21 @@ function fetchCommands(ctx: CommandContext): Command[] {
       ),
     )
   }
+  // A scan needs a filter to run, so it is offered once there is one — or while one is on
+  // screen, where the same key stops or re-runs it (spec 030).
+  if (ctx.filterQuery !== "" || ctx.scan !== null) {
+    out.push(
+      command(
+        "fetch.scan",
+        "Fetch",
+        ctx.scan === null ? "Scan the whole range with the filter" : "Stop or re-run the scan",
+        "shift+S",
+      ),
+    )
+  }
+  if (ctx.scan !== null) {
+    out.push(command("fetch.scanClose", "Fetch", "Leave the scan results", "esc"))
+  }
   out.push(command("fetch.columns", "Fetch", "Choose columns", "c"))
   const column = ctx.focus.column
   if (column !== null) {

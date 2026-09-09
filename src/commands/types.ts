@@ -1,4 +1,4 @@
-import type { MessageFollowState } from "@/state/types.ts"
+import type { MessageFollowState, MessageScanState } from "@/state/types.ts"
 
 // The command surface as data (spec 021). Types only: `buildCommands` decides which of
 // these exist right now, `runCommand` decides what each one does, and neither knows about
@@ -32,6 +32,8 @@ export type CommandId =
   | "fetch.reload"
   | "fetch.follow"
   | "fetch.followPause"
+  | "fetch.scan"
+  | "fetch.scanClose"
   | "fetch.columns"
   | "fetch.sortColumn"
   | "fetch.hideColumn"
@@ -111,6 +113,7 @@ export interface CommandContext {
   writeBlocked: string | null
   filterQuery: string
   follow: MessageFollowState
+  scan: MessageScanState | null
   showInternal: boolean
   detailOpen: boolean
   onlyTopic: boolean
@@ -126,6 +129,9 @@ export interface ViewActions {
   openTopic?: () => void
   openGroups?: () => void
   reload?: () => void
+  /** Start, stop or re-run the scan — which one depends on whether the consumer is still
+   *  running, and only the view's hook knows that (spec 030). */
+  scan?: () => void
   sortColumn?: () => void
   hideColumn?: () => void
   filterCell?: () => void

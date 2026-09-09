@@ -259,7 +259,7 @@ export function App({
     // state snapshot, so when a view claims esc the conditions below are still false.
     if (k.name === "escape") {
       if (state.topic !== null) {
-        if (state.messages.filter.query === "") {
+        if (state.messages.filter.query === "" && state.messages.scan === null) {
           dispatch({ type: "SELECT_TOPIC", topic: null })
         }
         return

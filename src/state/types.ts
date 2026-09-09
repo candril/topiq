@@ -96,6 +96,20 @@ export interface MessageFollowState {
   pinned: boolean
 }
 
+/** A scan in progress or finished (spec 030): the whole range streamed through the filter,
+ *  only the hits kept. Non-null replaces the window on screen, as the tail does. */
+export interface MessageScanState {
+  /** What is read — the active range, except latest-N, which scans from the beginning. */
+  range: FetchRange
+  /** The filter the scan started with. Fixed for its lifetime: rows already discarded
+   *  cannot be recovered by widening the bar afterwards, so the header names this one. */
+  query: string
+  /** Bumped on every start so re-running the same query restarts the consumer. */
+  run: number
+  /** Stopped by hand: the consumer is gone, the hits stay. */
+  stopped: boolean
+}
+
 /** A write waiting on its confirm keystroke (spec 019). The bytes are already decided:
  *  `produce` is built when the dialog opens, so confirming can only send what the dialog
  *  described — there is no second chance for a decoded payload to get in (spec 013). */
@@ -136,6 +150,8 @@ export interface MessagesState {
   /** Multi-line JS predicate editor (spec 011); non-null while it owns the keyboard. */
   jsEditor: string | null
   follow: MessageFollowState
+  /** Scan mode (spec 030); null when the window is what is on screen. */
+  scan: MessageScanState | null
   /** Index into the *visible* column set (spec 024); the view clamps it as inference
    *  changes the columns. */
   column: number
@@ -255,6 +271,11 @@ export type AppAction =
   | { type: "MSGS_JS_APPLY" }
   | { type: "MSGS_FOLLOW_TOGGLE" }
   | { type: "MSGS_FOLLOW_PAUSE_TOGGLE" }
+  /** Starts, or restarts, a scan over the active range with the active filter. A no-op
+   *  without a filter — the view says why, the reducer just refuses. */
+  | { type: "MSGS_SCAN_START" }
+  | { type: "MSGS_SCAN_STOP" }
+  | { type: "MSGS_SCAN_CLOSE" }
   | { type: "MSGS_CONFIRM_OPEN"; pending: PendingWrite }
   | { type: "MSGS_CONFIRM_CLOSE" }
   | { type: "MSGS_CONFIRM_TYPED"; typed: string }

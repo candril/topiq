@@ -38,6 +38,7 @@ export function commandContext(input: CommandContextInput): CommandContext {
     writeBlocked: writeBlockedReason(profile),
     filterQuery: state.messages.filter.query,
     follow: state.messages.follow,
+    scan: state.messages.scan,
     showInternal: state.topics.showInternal,
     detailOpen: state.topics.detailOpen,
     onlyTopic: state.groups.onlyTopic,

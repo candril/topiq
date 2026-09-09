@@ -11,6 +11,7 @@ const BASE: CommandContext = {
   writeBlocked: null,
   filterQuery: "",
   follow: { active: false, paused: false, pinned: false },
+  scan: null,
   showInternal: false,
   detailOpen: false,
   onlyTopic: false,
@@ -158,5 +159,21 @@ describe("titles and keys", () => {
     expect(
       find({ view: "groups", focus: { ...NO_FOCUS, group: "billing" } }, "groups.seek")?.title,
     ).toBe("Move billing's committed offsets")
+  })
+})
+
+describe("scan (spec 030)", () => {
+  test("a scan is offered once there is a filter, or while one is on screen", () => {
+    expect(ids({})).not.toContain("fetch.scan")
+    expect(ids({ filterQuery: "key:1" })).toContain("fetch.scan")
+    const scan = { range: { kind: "beginning" } as const, query: "key:1", run: 1, stopped: false }
+    expect(ids({ scan })).toContain("fetch.scan")
+    expect(find({ scan }, "fetch.scan")?.title).toBe("Stop or re-run the scan")
+  })
+
+  test("leaving the hits is offered only with a scan on screen", () => {
+    expect(ids({ filterQuery: "key:1" })).not.toContain("fetch.scanClose")
+    const scan = { range: { kind: "beginning" } as const, query: "key:1", run: 1, stopped: true }
+    expect(ids({ scan })).toContain("fetch.scanClose")
   })
 })

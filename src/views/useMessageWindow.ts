@@ -111,7 +111,9 @@ export function useMessageWindow(
           starts: range.kind === "timestamp" ? null : resolveStarts(range, meta.partitions),
         },
       }))
-      handle = await client.consume(topic, { range, limit: WINDOW_CAP }, (m) => pending.push(m))
+      handle = await client.consume(topic, { range, limit: WINDOW_CAP }, (m) => {
+        pending.push(m)
+      })
       if (cancelled) {
         await handle.stop()
         return

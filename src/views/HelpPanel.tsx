@@ -81,6 +81,15 @@ const GROUPS: HelpSection[] = [
     ],
   ],
   [
+    "Scan",
+    [
+      ["shift+S", "scan the whole range with the filter"],
+      ["shift+S", "again: stop · once finished: re-run"],
+      ["esc", "leave the hits, keep the filter"],
+      ["—", "hits stop at the cap; the header says how far it got"],
+    ],
+  ],
+  [
     "Filter",
     [
       ["/", "filter the window"],

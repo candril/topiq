@@ -20,7 +20,9 @@ async function read(
   opts: Parameters<KafkaClient["consume"]>[1],
 ): Promise<RawMessage[]> {
   const rows: RawMessage[] = []
-  const handle = await c.consume(topic, opts, (m) => rows.push(m))
+  const handle = await c.consume(topic, opts, (m) => {
+    rows.push(m)
+  })
   await handle.done
   return rows
 }
@@ -142,7 +144,9 @@ describe("demo client — writes", () => {
         follow: true,
         startAt: meta.partitions.map((p) => ({ partition: p.id, offset: p.high })),
       },
-      (m) => rows.push(m),
+      (m) => {
+        rows.push(m)
+      },
     )
     await new Promise((r) => setTimeout(r, 5))
     expect(rows).toHaveLength(0)

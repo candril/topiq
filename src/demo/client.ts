@@ -225,7 +225,7 @@ export function createDemoClient(seed: SeededCluster): KafkaClient {
           return
         }
         delivered++
-        onMessage(m)
+        void onMessage(m)
         if (delivered >= opts.limit) {
           void stop()
         }
@@ -257,7 +257,9 @@ export function createDemoClient(seed: SeededCluster): KafkaClient {
               cursors.delete(id)
               continue
             }
-            onMessage(partition.log[Number(offset - partition.low)]!)
+            // The backpressure promise is ignored on purpose: the log is in memory already,
+            // so there is nothing a wait would hold back (spec 030).
+            void onMessage(partition.log[Number(offset - partition.low)]!)
             cursors.set(id, offset + 1n)
             delivered++
             sent++

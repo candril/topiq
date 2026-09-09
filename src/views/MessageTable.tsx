@@ -24,6 +24,7 @@ import { CopyBar, copyBarRows } from "./CopyBar.tsx"
 import { copyFlows } from "./copyFlow.ts"
 import { JsFilterEditor, jsEditorRows } from "./JsFilterEditor.tsx"
 import { Spinner } from "./Loading.tsx"
+import { rateLabel, scanProgressLabel, scanStatusLabel, type ScanStatus } from "@/table/scan.ts"
 import { droppedLabel, tailLabel } from "@/table/tailBuffer.ts"
 import {
   formatTimestamp,
@@ -47,6 +48,7 @@ import { useFilteredMessages, type FilteredMessages } from "./useFilteredMessage
 import { useFilterPredicate } from "./useFilterPredicate.ts"
 import { useFollowTail, type FollowTail } from "./useFollowTail.ts"
 import { useMessageWindow, type ResolvedWindow, type WindowPhase } from "./useMessageWindow.ts"
+import { useScanRange, type ScanResult } from "./useScanRange.ts"
 
 export interface MessageTableProps {
   client: KafkaClient
@@ -141,7 +143,10 @@ export function MessageTable({
     ui.follow,
     filter.predicate,
   )
-  const filtered = useFilteredMessages(tail.rows ?? loaded, filter)
+  // A scan replaces the window the way a tail does; the two exclude each other in the
+  // reducer, so at most one of them has rows (spec 030).
+  const scan = useScanRange(client, registry, topic, ui.scan)
+  const filtered = useFilteredMessages(scan.rows ?? tail.rows ?? loaded, filter)
   // Sort after filtering: sorting the whole window and then filtering would reorder rows
   // under the cursor for no visible reason (spec 024).
   const display = useMemo(() => sortRows(filtered.rows, ui.sort), [filtered.rows, ui.sort])
@@ -175,7 +180,7 @@ export function MessageTable({
   // the filtered rows collapses them exactly when they are needed: a half-typed field name
   // is a valid bare-word term, so it filters the table to nothing, which empties the
   // columns, which leaves nothing to complete from.
-  const unfiltered = tail.rows ?? loaded
+  const unfiltered = scan.rows ?? tail.rows ?? loaded
   const suggestionFields = useMemo(() => {
     if (!ui.filter.active && ui.columnPicker === null) {
       return []
@@ -255,7 +260,30 @@ export function MessageTable({
     if (ui.follow.active) {
       dispatch({ type: "MSGS_FOLLOW_TOGGLE" })
     }
+    if (ui.scan !== null) {
+      dispatch({ type: "MSGS_SCAN_CLOSE" })
+    }
     setReload((r) => r + 1)
+  }
+
+  // One key, three meanings by state (spec 030): start, stop while it runs, run again once
+  // it has finished. The reducer cannot tell running from finished — only the hook knows —
+  // so the choice is made here.
+  const toggleScan = (): void => {
+    if (ui.scan !== null && scan.status === "scanning") {
+      return dispatch({ type: "MSGS_SCAN_STOP" })
+    }
+    if (ui.filter.query === "") {
+      return dispatch({
+        type: "SHOW_STATUS",
+        message: "a scan needs a filter — / first, then shift+S",
+        kind: "error",
+      })
+    }
+    if (filter.error !== null) {
+      return dispatch({ type: "SHOW_STATUS", message: `scan: ${filter.error}`, kind: "error" })
+    }
+    dispatch({ type: "MSGS_SCAN_START" })
   }
 
   const sortByColumn = (): void => {
@@ -319,6 +347,7 @@ export function MessageTable({
     },
     actions: {
       reload: reloadWindow,
+      scan: toggleScan,
       sortColumn: sortByColumn,
       hideColumn: hideFocusedColumn,
       filterCell: filterByCell,
@@ -520,7 +549,10 @@ export function MessageTable({
           columnCount: allColumns.length,
         })
       case "s":
-        return sortByColumn()
+        // `s` sorts the window; shift+S scans the topic (spec 030). Not a write, so the
+        // trigger/confirm rule does not apply — the seek dialog's shift+S lives in another
+        // view and never shares a screen with this one.
+        return k.shift ? toggleScan() : sortByColumn()
       case "g":
         return dispatch({
           type: "MSGS_JUMP",
@@ -578,9 +610,12 @@ export function MessageTable({
         }
         return
       case "escape":
-        // Claim esc only while a filter is applied; otherwise leave it to App's ascend
-        // (spec 020) — App sees the same snapshot, so exactly one meaning fires.
-        if (ui.filter.query !== "") {
+        // Claim esc only while a scan or a filter is on; otherwise leave it to App's ascend
+        // (spec 020) — App sees the same snapshot, so exactly one meaning fires. The scan
+        // goes first: it is the outer layer, and its filter is still wanted afterwards.
+        if (ui.scan !== null) {
+          dispatch({ type: "MSGS_SCAN_CLOSE" })
+        } else if (ui.filter.query !== "") {
           dispatch({ type: "MSGS_FILTER_CLEAR" })
         }
         return
@@ -609,6 +644,7 @@ export function MessageTable({
         capped={capped}
         resolved={resolved}
         tail={tail}
+        scan={scan}
         writeBlocked={writeBlockedReason(profile) !== null}
       />
       <HeaderRow columns={allColumns} column={columnCursor} sort={ui.sort} />
@@ -616,14 +652,19 @@ export function MessageTable({
           keeps its full height and pushes the suggestion list, the JS box and the filter
           bar off the bottom of the screen. */}
       <box flexDirection="column" flexGrow={1} flexShrink={1} minHeight={1}>
-        {phase === "error" && <text fg={theme.error}>consume failed — {error}</text>}
-        {phase === "loading" && display.length === 0 && (
+        {ui.scan !== null && display.length === 0 && (
+          <text fg={theme.textDim}>{scan.status === "scanning" ? "no hits yet" : "no hits"}</text>
+        )}
+        {ui.scan === null && phase === "error" && (
+          <text fg={theme.error}>consume failed — {error}</text>
+        )}
+        {ui.scan === null && phase === "loading" && display.length === 0 && (
           <box flexDirection="row" gap={1}>
             <Spinner />
             <text fg={theme.textDim}>consuming…</text>
           </box>
         )}
-        {phase === "done" && display.length === 0 && (
+        {ui.scan === null && phase === "done" && display.length === 0 && (
           <text fg={theme.textDim}>
             {filtered.filtering && filtered.total > 0 ? "no rows match" : "window is empty"}
           </text>
@@ -686,6 +727,7 @@ function WindowLine({
   capped,
   resolved,
   tail,
+  scan,
   writeBlocked,
 }: {
   ui: MessagesState
@@ -694,6 +736,7 @@ function WindowLine({
   capped: boolean
   resolved: ResolvedWindow | null
   tail: FollowTail
+  scan: ScanResult
   writeBlocked: boolean
 }) {
   const where =
@@ -702,24 +745,44 @@ function WindowLine({
       : resolved.starts === null
         ? `${resolved.partitions.length} parts (broker-resolved)`
         : resolvedSummary(resolved.starts, resolved.partitions)
+  // A scan reads its own range through its own query, and both are named here: a bar that
+  // differs from them is then visibly a second filter over the hits (spec 030).
+  const [head, detail] =
+    ui.scan === null
+      ? [rangeSummary(ui.range), where]
+      : [`scan ${rangeSummary(ui.scan.range)}`, ui.scan.query]
   const follow = tailLabel(tail.status)
   // Eviction and backpressure both mean rows existed that this window will never show —
   // stated, never silently truncated (nfr/004).
   const dropped = droppedLabel(tail.dropped)
+  const rate = rateLabel(scan.rate)
   return (
     <box flexDirection="row" width="100%" gap={2}>
-      <text fg={theme.secondary}>{rangeSummary(ui.range)}</text>
-      <text fg={theme.textDim}>{where}</text>
+      <text fg={theme.secondary}>{head}</text>
+      <text fg={theme.textDim}>{detail}</text>
       <box flexGrow={1} />
       {/* Spec 019 P1: a disabled write is stated up front, not only when a key is pressed —
           "read-only" is why `p` will refuse, visible before you reach for it. */}
       {writeBlocked && <text fg={theme.textDim}>read-only</text>}
       {dropped !== null && <text fg={theme.warning}>{dropped}</text>}
-      {capped && tail.rows === null && <text fg={theme.warning}>capped at {WINDOW_CAP}</text>}
+      {capped && tail.rows === null && scan.rows === null && (
+        <text fg={theme.warning}>capped at {WINDOW_CAP}</text>
+      )}
       <text fg={filtered.filtering ? theme.text : theme.textDim}>
         {rowCountLabel(filtered.matched, filtered.total, filtered.filtering)}
       </text>
-      {follow === null ? (
+      {ui.scan !== null ? (
+        // Progress is the point of a scan over a piped dump: how far it got, how fast, and
+        // which of the four ways it ended (spec 030).
+        <box flexDirection="row" gap={1}>
+          {scan.status === "scanning" && <Spinner />}
+          <text fg={theme.textDim}>{scanProgressLabel(scan.scanned, scan.planned)}</text>
+          {scan.status === "scanning" && rate !== null && <text fg={theme.textDim}>{rate}</text>}
+          <text fg={SCAN_FG[scan.status]}>
+            {scan.status === "error" ? `scan failed — ${scan.error}` : scanStatusLabel(scan.status)}
+          </text>
+        </box>
+      ) : follow === null ? (
         // Deliberately the quiet end of spec 025: a consume streams into the rows below,
         // so it gets a spinner beside the label and never takes the pane.
         <box flexDirection="row" gap={1}>
@@ -739,6 +802,14 @@ const FOLLOW_FG: Record<FollowTail["status"], string> = {
   off: theme.textDim,
   following: theme.success,
   paused: theme.warning,
+  error: theme.error,
+}
+
+const SCAN_FG: Record<ScanStatus, string> = {
+  scanning: theme.text,
+  end: theme.success,
+  stopped: theme.warning,
+  capped: theme.warning,
   error: theme.error,
 }
 
