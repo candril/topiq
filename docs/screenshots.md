@@ -48,6 +48,7 @@ opens connected to `demo-test` on the topic list, cursor on `customers.updated.v
 | `decode-failed` | `↵ G` | the `decode failed` row |
 | `filter` / `filter-suggest` / `filter-cell` | `… /` … | the filter bar, suggestions, filter-by-cell |
 | `js-filter` | `… =` | the JS predicate box |
+| `scan` | `… / value.customer.tier:PRO ↵ ⇧S` | a scan of the whole topic: range, query and progress in the header |
 | `follow` / `follow-paused` | `… f` / `… f space` | the tail, live and paused |
 | `replay` / `replayed` | `… p` / `… p ⇧R` | the confirm dialog, and the landed replay |
 | `copy` / `copy-confirm` | from `demo-prod`: `… y` / `… y ↵ ↵` | the destination bar, and the two-registry dialog — prod → test, the only direction with a writable target |

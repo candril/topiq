@@ -28,6 +28,10 @@ filter-suggest   | j Enter wait / value.cus
 filter-cell      | j Enter wait l l l l l *
 js-filter        | j Enter wait =
 
+# ── Scan ──────────────────────────────────────────────────────────────────────
+# A scan needs a filter, so the recipe types one, applies it, then presses shift+S.
+scan             | j Enter wait / value.customer.tier:PRO Enter S wait
+
 # ── Follow ────────────────────────────────────────────────────────────────────
 follow           | j Enter wait f wait wait
 follow-paused    | j Enter wait f wait Space

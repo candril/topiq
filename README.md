@@ -32,6 +32,12 @@ Open a topic and the latest 50 messages are there, newest first, with columns in
 
 <img src="site/src/assets/screenshots/filter-suggest.png" alt="The filter bar with field suggestions" width="100%" />
 
+### Search a whole topic, not a window
+
+A window holds 10,000 rows and the filter narrows that. `⇧S` turns it around: every message in the range streams through the filter and only the hits are kept, so the range can be the whole topic. The header counts what has been read against the watermarks and how fast, and nothing is dropped on the way — when decoding falls behind, the fetch waits rather than skipping a message you were searching for.
+
+<img src="site/src/assets/screenshots/scan.png" alt="A scan streaming a whole topic through the filter, with progress and throughput in the header" width="100%" />
+
 ### Replay a message — the same bytes
 
 `p` re-produces the message under the cursor: raw key, value and headers, verbatim. No decode, no re-encode, so the embedded schema id stays valid and the bytes are provably identical. `e` edits it in `$EDITOR` first; `⇧N` crafts a new one from the subject's latest schema; `y` copies it to another cluster — decoded here, re-encoded there, and the dialog says so.
@@ -104,6 +110,9 @@ timestamp next to it.
 - **Filter** — `key:12345 value.IsActive:true value.UpdatedAt>2026-08-01`, with ranges,
   regex and nested fields. `=` switches to a raw JS predicate that runs locally on your
   own credentials.
+- **Scan** — `⇧S` streams a whole range through the filter and keeps only the hits, so a
+  search is not limited to the loaded window. Progress, throughput and a stated cap;
+  backpressure instead of dropped messages.
 - **Live tail** — follow a topic with a bounded buffer; filters apply to the stream.
 - **Replay** — re-produce a message byte-for-byte, or decode it into `$EDITOR`, edit,
   re-encode against its own schema and produce. Craft a new message from the topic's

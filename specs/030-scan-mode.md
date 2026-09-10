@@ -127,3 +127,5 @@ those three things.
 | `src/state/messages.ts` | `scan` state and its actions; scan/follow/range exclusions |
 | `src/views/MessageTable.tsx` | `shift+S`, esc ordering, header line |
 | `src/commands/*` | `fetch.scan` / `fetch.scanClose` in the palette |
+| `docs/shots.txt` | The `scan` recipe, so the screenshot regenerates with the rest ([028](./028-docs-screenshots-and-gif.md)) |
+| `site/…/peek-and-filter.md` | The reference section: what it reads, that it is a real read, backpressure, the end states |
