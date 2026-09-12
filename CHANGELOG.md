@@ -7,6 +7,8 @@ release, so write it before tagging.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-12
+
 ### Changed
 
 - **OpenTUI 0.1.87 to 0.5.11**, the terminal renderer everything is drawn with, together with
@@ -16,6 +18,14 @@ release, so write it before tagging.
 - oxlint 1.82, oxfmt 0.67, `@types/bun` 1.4.2 and `undici-types` 8.10.2.
 - GitHub Actions moved to the Node 24 majors ahead of Node 20 being removed from hosted runners on
   23 September 2026.
+- The build now declares the minimum Bun it needs and refuses to run below it, so an incompatible
+  runtime says so instead of failing later with an unexplained internal error.
+
+### Fixed
+
+- Reading the config failed outright on Bun 1.4. The loader imported the TOML file as a
+  module with a cache-busting query string, which Bun 1.4 stopped resolving. It is parsed
+  from the file's text now, which also removes the module cache it was working around.
 
 ## [0.2.0] - 2026-09-09
 
@@ -100,6 +110,7 @@ built and unit-tested but has not yet produced a byte to a real broker.
 - `TOPIQ_KAFKA_LOG=<path>` appends the Kafka client's debug log to a file, with anything
   token-shaped redacted.
 
-[Unreleased]: https://github.com/candril/topiq/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/candril/topiq/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/candril/topiq/compare/v0.2.0...v0.3.0
 [0.1.1]: https://github.com/candril/topiq/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/candril/topiq/releases/tag/v0.1.0
