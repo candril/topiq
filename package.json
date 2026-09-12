@@ -26,16 +26,16 @@
     "fmt:check": "oxfmt --check src spike scripts"
   },
   "dependencies": {
-    "@opentui/core": "0.1.87",
-    "@opentui/react": "0.1.87",
+    "@opentui/core": "0.5.11",
+    "@opentui/react": "0.5.11",
     "avsc": "^5.7.9",
     "kafkajs": "^2.2.4",
     "kafkajs-snappy": "^1.1.0",
-    "react": "19"
+    "react": "19.3.0"
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/react": "^18.2.0",
+    "@types/react": "19.3.0",
     "oxfmt": "^0.42.0",
     "oxlint": "^1.57.0",
     "undici-types": "^8.7.0"
