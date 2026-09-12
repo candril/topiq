@@ -7,6 +7,16 @@ release, so write it before tagging.
 
 ## [Unreleased]
 
+### Changed
+
+- **OpenTUI 0.1.87 to 0.5.11**, the terminal renderer everything is drawn with, together with
+  `@opentui/react` and React 19.3. The one API break was the renderer's console option; screenshots
+  taken before and after are pixel-identical, so nothing about the rendering changed.
+- Docs site to Astro 7 and Starlight 0.42, two majors.
+- oxlint 1.82, oxfmt 0.67, `@types/bun` 1.4.2 and `undici-types` 8.10.2.
+- GitHub Actions moved to the Node 24 majors ahead of Node 20 being removed from hosted runners on
+  23 September 2026.
+
 ## [0.2.0] - 2026-09-09
 
 ### Added
