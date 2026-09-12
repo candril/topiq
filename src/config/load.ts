@@ -16,8 +16,6 @@ function expandHome(profile: ClusterProfile): ClusterProfile {
   return profile
 }
 
-let loadCounter = 0
-
 export async function loadConfig(path: string = configPath()): Promise<ClusterProfile[]> {
   const file = resolve(path)
   if (!(await Bun.file(file).exists())) {
@@ -25,17 +23,21 @@ export async function loadConfig(path: string = configPath()): Promise<ClusterPr
       `${path}: not found — create it (see config.example.toml) or point TOPIQ_CONFIG at it`,
     )
   }
-  const raw = await importToml(file, path)
+  const raw = await parseToml(file, path)
   return parseConfig(raw, path).map(expandHome)
 }
 
-async function importToml(file: string, displayPath: string): Promise<unknown> {
+/**
+ * Parsed from the file's text rather than imported as a module, so there is no module
+ * cache to defeat and an edited config re-reads within one process for free.
+ *
+ * This used to be a dynamic import with a counter in the query string to bust that cache.
+ * Bun 1.4 stopped resolving a query-suffixed file specifier, which made every config load
+ * throw "Cannot find module …?1", so the tool could not read any config at all.
+ */
+async function parseToml(file: string, displayPath: string): Promise<unknown> {
   try {
-    // Query defeats Bun's module cache so an edited config reloads within one process.
-    // Monotonic counter, not Date.now(): two loads in the same millisecond would share a
-    // query string and hit Bun's module cache, returning stale config.
-    const module = await import(`${file}?${++loadCounter}`, { with: { type: "toml" } })
-    return module.default
+    return Bun.TOML.parse(await Bun.file(file).text())
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error)
     throw new ConfigError(`${displayPath}: invalid TOML — ${detail}`)
