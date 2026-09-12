@@ -31,6 +31,30 @@ const ALL_TARGETS: Target[] = [
   { os: "linux", arch: "arm64" },
 ]
 
+/**
+ * A compiled binary embeds the runtime of whichever bun built it, so building on too old
+ * a bun ships something that dies at import time with a NotImplementedError naming an
+ * internal node shim rather than the actual cause. Fail here, where the message can say
+ * what is wrong. The floor lives in candril/homebrew-tap/tools.json.
+ */
+const BUN_FLOOR = "1.3.0"
+
+function olderThan(have: string, want: string): boolean {
+  const a = have.split(".").map(Number)
+  const b = want.split(".").map(Number)
+  for (let i = 0; i < 3; i++) {
+    const x = a[i] ?? 0
+    const y = b[i] ?? 0
+    if (x !== y) return x < y
+  }
+  return false
+}
+
+if (olderThan(Bun.version, BUN_FLOOR)) {
+  console.error(`topiq needs bun ${BUN_FLOOR} or newer to build; this is ${Bun.version}`)
+  process.exit(1)
+}
+
 const projectDir = resolve(import.meta.dir, "..")
 process.chdir(projectDir)
 
