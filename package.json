@@ -36,9 +36,9 @@
   "devDependencies": {
     "@types/bun": "latest",
     "@types/react": "19.3.0",
-    "oxfmt": "^0.42.0",
-    "oxlint": "^1.57.0",
-    "undici-types": "^8.7.0"
+    "oxfmt": "^0.67.0",
+    "oxlint": "^1.82.0",
+    "undici-types": "^8.10.2"
   },
   "peerDependencies": {
     "typescript": "^5"
