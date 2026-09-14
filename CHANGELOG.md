@@ -7,7 +7,7 @@ release, so write it before tagging.
 
 ## [Unreleased]
 
-## [0.3.0] - 2026-09-12
+## [0.3.0] - 2026-09-14
 
 ### Changed
 
