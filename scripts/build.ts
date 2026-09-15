@@ -45,7 +45,9 @@ function olderThan(have: string, want: string): boolean {
   for (let i = 0; i < 3; i++) {
     const x = a[i] ?? 0
     const y = b[i] ?? 0
-    if (x !== y) return x < y
+    if (x !== y) {
+      return x < y
+    }
   }
   return false
 }
