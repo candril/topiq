@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test"
-import { createRegistry, keySubject, valueSubject } from "./registry.ts"
+import { createRegistry, keySubject, registryFetchFailure, valueSubject } from "./registry.ts"
 
 const SCHEMA = JSON.stringify({ type: "long" })
 const realFetch = globalThis.fetch
@@ -102,5 +102,35 @@ describe("getVersionForId", () => {
     expect(await registry().getVersionForId("orders-value", 30)).toBeNull()
     stubFetch(() => new Response("nope", { status: 500 }))
     await expect(registry().getVersionForId("orders-value", 30)).rejects.toThrow("HTTP 500")
+  })
+})
+
+describe("registryFetchFailure (nfr/004)", () => {
+  const host = "https://registry.example.com:24740"
+
+  test("a trust failure names the setting that decides trust, not just OpenSSL's wording", () => {
+    const error = registryFetchFailure(host, new Error("unable to get local issuer certificate"))
+    expect(error.message).toBe(
+      `registry TLS: unable to get local issuer certificate — check ca_cert covers ${host}`,
+    )
+  })
+
+  test("the other trust wordings are recognised too", () => {
+    for (const raw of [
+      "unable to verify the first certificate",
+      "self signed certificate in certificate chain",
+      "certificate has expired",
+    ]) {
+      expect(registryFetchFailure(host, new Error(raw)).message).toContain("check ca_cert")
+    }
+  })
+
+  test("anything else keeps its own words, with the host in front", () => {
+    const error = registryFetchFailure(host, new Error("connect ECONNREFUSED"))
+    expect(error.message).toBe(`registry ${host}: connect ECONNREFUSED`)
+  })
+
+  test("a non-Error rejection still produces a message", () => {
+    expect(registryFetchFailure(host, "socket hang up").message).toContain("socket hang up")
   })
 })

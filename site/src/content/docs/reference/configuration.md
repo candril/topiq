@@ -33,7 +33,7 @@ and what every dialog shows, so keep it short and unambiguous.
 | `registry` | yes | Schema registry URL, `http(s)`. Aiven serves it on the broker host under a different port. It authenticates with the SASL credentials below as basic auth. |
 | `sasl` | yes | `{ mechanism, username }`. `mechanism` is `"scram-sha-256"` or `"scram-sha-512"` — per profile, because two clusters in one org routinely disagree. |
 | `password_cmd` | yes | A shell command whose trimmed stdout is the password. Run on demand, once per connection; the result is never stored, logged or written. |
-| `ca_cert` | no | Path to a PEM CA bundle; `~` expands. Needed for any cluster whose chain roots in a private CA (Aiven's project CA, for one). Applies to brokers **and** registry. |
+| `ca_cert` | no | Path to a PEM CA bundle; `~` expands. Needed for any cluster whose chain roots in a private CA (Aiven's project CA, for one). Applies to brokers **and** registry, and is **added to** the public roots rather than replacing them — so a cluster whose broker uses a private CA and whose registry is publicly rooted needs nothing extra. |
 | `topic_prefix` | no | A namespace: filters the topic list to it, and is what cross-cluster copy strips and re-adds when mapping a topic to the sibling. |
 | `group` | pair | The logical cluster family. Profiles sharing a `group` are environments of one cluster. |
 | `env` | pair | This profile's environment. `group` and `env` come as a pair — set both or neither. |

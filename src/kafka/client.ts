@@ -3,6 +3,7 @@ import { AssignerProtocol, CompressionCodecs, CompressionTypes, Kafka } from "ka
 import snappyCodec from "kafkajs-snappy"
 import type { Admin, Consumer, Producer, SASLOptions } from "kafkajs"
 import type { ClusterProfile } from "@/config/schema.ts"
+import { trustAnchors } from "@/config/trust.ts"
 import type {
   ConsumerGroupMeta,
   GroupOverview,
@@ -40,7 +41,9 @@ export function createKafkaClient(profile: ClusterProfile, password: string): Ka
   const kafka = new Kafka({
     clientId: clientId(identity),
     brokers: profile.brokers,
-    ssl: profile.caCert ? { ca: [readFileSync(profile.caCert, "utf8")] } : true,
+    // The private CA is added to the public roots, never substituted for them — see
+    // `trustAnchors`. `true` is kafkajs's "TLS with the defaults".
+    ssl: profile.caCert ? { ca: trustAnchors(readFileSync(profile.caCert, "utf8")) } : true,
     // kafkajs discriminates SASLOptions on the mechanism *literal*, so a profile whose
     // mechanism is the scram-256/512 union needs the assertion — both arms take the
     // same username/password shape.

@@ -9,6 +9,12 @@ release, so write it before tagging.
 
 ### Fixed
 
+- `ca_cert` is now added to the public root certificates instead of replacing them. A
+  supplied CA is the whole trust store as far as the TLS layer is concerned, so a cluster
+  whose broker presents a private CA and whose schema registry is publicly rooted failed
+  every schema fetch with `unable to get local issuer certificate`, which the table showed
+  as `decode failed` on every row. A registry TLS failure now also names `ca_cert` and the
+  host instead of repeating OpenSSL's wording.
 - A dependency's runtime warning no longer corrupts the screen. Process warnings are taken
   off the terminal before the renderer starts and routed to the debug log, because a write
   to stderr splices into a rendered frame and no keystroke repairs it. kafkajs raises one

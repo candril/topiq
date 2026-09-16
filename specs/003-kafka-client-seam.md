@@ -79,7 +79,14 @@ The one abstraction that keeps the UI independent of a Kafka library, and the de
   valid to 2030).** Default trust stores reject it (`SELF_SIGNED_CERT_IN_CHAIN`); the CA
   must be configured per cluster profile ([002](./002-cluster-config.md)). The server
   sends the full chain, so the CA is extractable via `openssl s_client -showcerts`.
-- The registry (`:24740`) uses the same CA; the registry HTTP client needs it too.
+- ~~The registry (`:24740`) uses the same CA; the registry HTTP client needs it too.~~
+  **Amended (as built):** the registry needs the CA, but it cannot be assumed to share the
+  broker's. Some deployments front the registry with a publicly-rooted certificate, or a
+  corporate proxy re-signs it. A configured CA is therefore **added to** the default roots
+  (`trustAnchors`), never substituted for them: the TLS layer treats a supplied `ca` as the
+  entire trust store, so pinning the project CA made a publicly-rooted registry fail every
+  fetch with `unable to get local issuer certificate` — rendered as `decode failed` on every
+  row ([nfr/002](./nfr/002-terminal-compatibility.md) for why the row is all the reader gets).
 - **kafkajs ships a gzip codec and nothing else.** Many clusters produce snappy
   batches, and an unregistered codec does not fall back — it throws `KafkaJSNotImplemented`
   inside the fetch decoder, which kills the consumer runner. The seam registers
