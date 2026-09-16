@@ -7,6 +7,13 @@ release, so write it before tagging.
 
 ## [Unreleased]
 
+### Fixed
+
+- A dependency's runtime warning no longer corrupts the screen. Process warnings are taken
+  off the terminal before the renderer starts and routed to the debug log, because a write
+  to stderr splices into a rendered frame and no keystroke repairs it. kafkajs raises one
+  `TimeoutNegativeWarning` on the first response of every session against a real broker.
+
 ## [0.3.0] - 2026-09-14
 
 ### Changed

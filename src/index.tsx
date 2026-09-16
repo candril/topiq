@@ -12,10 +12,12 @@ import { DEMO_PROFILES, DEMO_TEST, demoScale } from "@/demo/profiles.ts"
 import { createDemoRegistry } from "@/demo/registry.ts"
 import { demoEpoch, seedCluster } from "@/demo/seed.ts"
 import { createKafkaClient } from "@/kafka/client.ts"
+import { debugLogger } from "@/kafka/log.ts"
 import type { KafkaClient } from "@/kafka/types.ts"
 import { createRegistry } from "@/schema/registry.ts"
 import type { StatusMessage } from "@/state.ts"
 import { version } from "@/version.ts"
+import { captureWarnings } from "@/warnings.ts"
 
 const USAGE = `topiq — peek, filter, replay. Kafka without leaving the terminal.
 
@@ -125,6 +127,11 @@ async function startup(): Promise<Startup> {
 }
 
 const { profiles, autoConnect, topic, status } = await startup()
+
+// From here the screen is ours: a runtime warning printed to stderr would splice into a
+// rendered frame and stay there (nfr/002). Captured before the renderer exists, so the
+// window between the two cannot be hit.
+captureWarnings(debugLogger())
 
 const renderer = await createCliRenderer({ exitOnCtrlC: false })
 

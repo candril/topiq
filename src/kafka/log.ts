@@ -30,6 +30,40 @@ export function fileLogCreator(path: string): logCreator {
     }
 }
 
+/**
+ * The same file as a plain JSON-line sink, for the things that are not kafkajs but still
+ * must not reach the terminal — process warnings, above all (`src/warnings.ts`).
+ *
+ * Returns a no-op when no log is configured. Dropping a warning is deliberate: the
+ * alternative is printing it onto the alternate screen, which is the corruption this
+ * exists to prevent, and a reader who wants the detail sets the variable and reruns.
+ */
+export function debugLogger(
+  env: NodeJS.ProcessEnv = process.env,
+): (entry: Record<string, unknown>) => void {
+  const path = env[KAFKA_LOG_ENV]
+  if (path === undefined || path === "") {
+    return () => {}
+  }
+  return (entry) => {
+    try {
+      appendFileSync(path, `${JSON.stringify(entry, redactValue)}\n`)
+    } catch {
+      // An unwritable log file must not take the caller down with it.
+    }
+  }
+}
+
+/** Ours or the runtime's own vocabulary, never data: a level, a namespace, a warning class
+ *  name. These are exempt because every warning name is a long CamelCase run — exactly the
+ *  shape the secret filter matches — so redacting them would reliably destroy the one token
+ *  that says what the line is about. Every other string stays subject to it. */
+const STRUCTURAL = new Set(["level", "namespace", "name"])
+
+function redactValue(key: string, value: unknown): unknown {
+  return typeof value === "string" && !STRUCTURAL.has(key) ? redact(value) : value
+}
+
 export function kafkaLogging(env: NodeJS.ProcessEnv = process.env): KafkaLogging {
   const path = env[KAFKA_LOG_ENV]
   if (path === undefined || path === "") {
