@@ -7,6 +7,8 @@ release, so write it before tagging.
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-09-21
+
 ### Fixed
 
 - `ca_cert` is now added to the public root certificates instead of replacing them. A
