@@ -7,6 +7,8 @@ release, so write it before tagging.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-21
+
 ### Added
 
 - Avro fields declared `timestamp-millis` or `date` now read as dates instead of raw millis,
