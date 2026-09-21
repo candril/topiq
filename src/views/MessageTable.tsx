@@ -27,7 +27,6 @@ import { Spinner } from "./Loading.tsx"
 import { rateLabel, scanProgressLabel, scanStatusLabel, type ScanStatus } from "@/table/scan.ts"
 import { droppedLabel, tailLabel } from "@/table/tailBuffer.ts"
 import {
-  formatTimestamp,
   parseRangeInput,
   plannedCount,
   rangeSummary,
@@ -36,6 +35,7 @@ import {
   trimLatestN,
   WINDOW_CAP,
 } from "@/table/window.ts"
+import { formatTimestamp } from "@/time.ts"
 import { theme } from "@/theme.ts"
 import type { DecodedMessage, PartitionMeta } from "@/types.ts"
 import { viewInEditor } from "@/editor/view.ts"

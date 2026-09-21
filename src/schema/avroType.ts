@@ -24,8 +24,11 @@ export function parseType(raw: string): avro.Type {
  * long in the message that is not a BigInt (nfr/006 invariant 1), inconsistent with every
  * other long for anything that walks types by name (src/schema/coerce.ts, skeleton.ts).
  *
- * Dropping the logical annotation costs nothing: no logical types are registered, so avsc
- * already ignores it and keeps the underlying type.
+ * Dropping the logical annotation costs avsc nothing: no logical types are registered, so
+ * it already ignores them and keeps the underlying type. The reading is not lost either —
+ * `logical.ts` recovers declared dates from the raw schema after decode (spec 031), which
+ * is the only order that works: a logical type registered here would wrap the Number-based
+ * long avsc builds for the object form, i.e. the very trap this walk exists to avoid.
  */
 function normalizeSchema(node: unknown): unknown {
   if (Array.isArray(node)) {
@@ -68,21 +71,40 @@ function normalizeFields(fields: unknown): unknown {
   })
 }
 
+/** The avsc type and the schema it was built from. The raw JSON is kept because
+ *  `normalizeSchema` drops the logical annotations on the way into avsc, and reading a
+ *  declared date back off the schema needs them (spec 031). */
+interface CachedSchema {
+  type: avro.Type
+  /** Parsed schema JSON, exactly as the registry serves it — annotations intact. */
+  json: unknown
+}
+
 // Keyed by registry instance: schema ids are registry-local, so a shared cache would
 // hand one cluster's type to another cluster's bytes (spec 016).
-const typeCache = new WeakMap<SchemaFetcher, Map<number, avro.Type>>()
+const typeCache = new WeakMap<SchemaFetcher, Map<number, CachedSchema>>()
 
-export async function typeForSchemaId(registry: SchemaFetcher, id: number): Promise<avro.Type> {
-  let types = typeCache.get(registry)
-  if (!types) {
-    types = new Map()
-    typeCache.set(registry, types)
+async function cachedForId(registry: SchemaFetcher, id: number): Promise<CachedSchema> {
+  let schemas = typeCache.get(registry)
+  if (!schemas) {
+    schemas = new Map()
+    typeCache.set(registry, schemas)
   }
-  const cached = types.get(id)
+  const cached = schemas.get(id)
   if (cached) {
     return cached
   }
-  const type = parseType(await registry.getSchemaById(id))
-  types.set(id, type)
-  return type
+  const raw = await registry.getSchemaById(id)
+  const entry: CachedSchema = { type: parseType(raw), json: JSON.parse(raw) }
+  schemas.set(id, entry)
+  return entry
+}
+
+export async function typeForSchemaId(registry: SchemaFetcher, id: number): Promise<avro.Type> {
+  return (await cachedForId(registry, id)).type
+}
+
+/** The schema as the registry serves it, for the logical types avsc was not given. */
+export async function schemaJsonForId(registry: SchemaFetcher, id: number): Promise<unknown> {
+  return (await cachedForId(registry, id)).json
 }

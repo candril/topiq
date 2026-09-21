@@ -74,6 +74,7 @@ lifecycle, prioritisation, Open Questions, and cross-linking.
 | 028 | [Docs Screenshots, Demo Gif & Site](./028-docs-screenshots-and-gif.md) | In Progress | lane's tmux + Pillow pipeline over `--demo`; Astro/Starlight site on Pages |
 | 029 | [Connection Hygiene & Fetch Latency](./029-connection-hygiene-and-fetch-latency.md) | In Progress | Never create a topic, attributable ids, end-of-partition from the fetch, one describe per group list, `TOPIQ_KAFKA_LOG`; group-free reads pending |
 | 030 | [Scan Mode](./030-scan-mode.md) | In Progress | `shift+S` streams a whole range through the filter and keeps only the hits; progress, stop, a stated cap, backpressure on the seam |
+| 031 | [Date Fields as Dates](./031-date-fields.md) | In Progress | `timestamp-millis` and `date` decode to `Date`, so a declared date reads, sorts and filters like the envelope timestamp; the write paths are unchanged |
 
 ## NFR Specs
 

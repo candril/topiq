@@ -7,6 +7,13 @@ release, so write it before tagging.
 
 ## [Unreleased]
 
+### Added
+
+- Avro fields declared `timestamp-millis` or `date` now read as dates instead of raw millis,
+  in the table, the `$EDITOR` view, sorting and filtering. The reading comes from the schema,
+  never from the value, and the other logical time types deliberately keep their digits. The
+  editable buffer still carries millis, so edit-and-replay round-trips byte for byte.
+
 ## [0.3.1] - 2026-09-21
 
 ### Fixed

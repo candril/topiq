@@ -31,6 +31,14 @@ the union of their fields with blanks where a row has none.
 Every Avro `long` is a `BigInt`, rendered as bare digits. `Number` never touches an int64
 anywhere in topiq — not on decode, not on sort, not on filter, not on re-encode.
 
+A field the schema declares as `timestamp-millis` or `date` is the exception, and reads as a
+date rather than as the millis underneath it — the same rendering as the envelope timestamp
+beside it, so it sorts chronologically and takes an ISO-8601 term in the filter. The reading
+comes from the schema and never from the value, so a plain `long` that happens to look like
+an instant stays digits. `timestamp-micros`, `time-millis` and `local-timestamp-millis` keep
+their digits too: a `Date` cannot hold microseconds, has no date to put a time of day on, and
+would state a zone the producer never gave.
+
 `h`/`l` walk the columns, `s` sorts by the selected one (BigInt compares as BigInt, absent
 values sort last in both directions), `-` hides it, `c` opens the picker, `0`/`$` jump.
 

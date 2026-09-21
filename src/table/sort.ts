@@ -34,6 +34,13 @@ const RANK: Record<string, number> = {
  *  Number here would reorder rows wrongly above 2^53 (nfr/006), which is the same class
  *  of silent wrongness the whole project exists to avoid. */
 function compareValues(a: unknown, b: unknown): number {
+  // Before the object rank below: a declared date decodes to a Date (spec 031), and two of
+  // them are both "object", so without this a date column would sort as one flat group.
+  if (a instanceof Date && b instanceof Date) {
+    const left = a.getTime()
+    const right = b.getTime()
+    return left === right ? 0 : left < right ? -1 : 1
+  }
   if (typeof a === "bigint" && typeof b === "bigint") {
     return a === b ? 0 : a < b ? -1 : 1
   }

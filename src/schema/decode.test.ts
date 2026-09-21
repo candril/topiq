@@ -1,7 +1,12 @@
 import { describe, expect, test } from "bun:test"
 import avro from "avsc"
 import type { RawMessage } from "@/types.ts"
+import { stringifyEditable } from "@/render/json.ts"
+import { coerceToType } from "./coerce.ts"
+import { parseType } from "./avroType.ts"
 import { decodeMessage } from "./decode.ts"
+import { validate } from "./encode.ts"
+import { parseJsonLossless } from "./jsonFallback.ts"
 import { longType } from "./long.ts"
 import type { SchemaFetcher } from "./registry.ts"
 
@@ -104,5 +109,68 @@ describe("decodeMessage", () => {
 
   test("longType round-trips: encode BigInt -> decode BigInt", () => {
     expect(longType.fromBuffer(longType.toBuffer(BIG))).toBe(BIG)
+  })
+})
+
+const STAMPED_SCHEMA = JSON.stringify({
+  type: "record",
+  name: "Stamped",
+  fields: [
+    { name: "OrderId", type: "long" },
+    { name: "PlacedAt", type: { type: "long", logicalType: "timestamp-millis" } },
+  ],
+})
+
+const stampedRegistry: SchemaFetcher = {
+  async getSchemaById(id: number) {
+    if (id === 44) {
+      return STAMPED_SCHEMA
+    }
+    throw new Error(`unknown schema id ${id}`)
+  },
+}
+
+// Through parseType, not avsc directly: `{"type":"long","logicalType":…}` is the object
+// form that bypasses the `registry` option, so raw avsc would build a Number-based long for
+// exactly the field under test (see `normalizeSchema`).
+const stampedType = parseType(STAMPED_SCHEMA)
+
+describe("declared dates (spec 031)", () => {
+  const PLACED = 1_789_980_152_905n
+
+  test("a timestamp-millis field decodes to a Date, its plain-long sibling does not", async () => {
+    const value = frame(44, stampedType.toBuffer({ OrderId: BIG, PlacedAt: PLACED }))
+    const decoded = await decodeMessage(raw({ value }), stampedRegistry)
+    const entity = decoded.decodedValue as { OrderId: bigint; PlacedAt: Date }
+
+    expect(entity.PlacedAt).toBeInstanceOf(Date)
+    expect(entity.PlacedAt.toISOString()).toBe("2026-09-21T08:42:32.905Z")
+    // The sibling proves the reading comes from the schema, not from the value's magnitude.
+    expect(entity.OrderId).toBe(BIG)
+  })
+
+  test("the edit buffer round-trips a date back to the same bytes (specs 014, 031)", async () => {
+    const original = stampedType.toBuffer({ OrderId: BIG, PlacedAt: PLACED })
+    const decoded = await decodeMessage(raw({ value: frame(44, original) }), stampedRegistry)
+
+    // What the $EDITOR buffer would hold, parsed back the way edit-and-replay parses it.
+    const buffer = stringifyEditable(decoded.decodedValue)
+    expect(buffer).toContain(String(PLACED))
+    expect(buffer).not.toContain("2026-09-21T")
+
+    const coerced = coerceToType(stampedType, parseJsonLossless(buffer))
+    expect(validate(stampedType, coerced)).toEqual([])
+    expect(stampedType.toBuffer(coerced as object).equals(original)).toBe(true)
+  })
+
+  test("a decoded date re-encodes directly too — the cross-cluster copy path (spec 016)", () => {
+    const withDate = { OrderId: BIG, PlacedAt: new Date(Number(PLACED)) }
+    const coerced = coerceToType(stampedType, withDate)
+    expect(validate(stampedType, coerced)).toEqual([])
+    expect(
+      stampedType
+        .toBuffer(coerced as object)
+        .equals(stampedType.toBuffer({ OrderId: BIG, PlacedAt: PLACED })),
+    ).toBe(true)
   })
 })

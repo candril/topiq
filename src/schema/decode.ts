@@ -1,5 +1,6 @@
 import type { DecodedMessage, RawMessage } from "@/types.ts"
-import { typeForSchemaId } from "./avroType.ts"
+import { schemaJsonForId, typeForSchemaId } from "./avroType.ts"
+import { applyLogicalDates } from "./logical.ts"
 import { parseJsonLossless } from "./jsonFallback.ts"
 import type { SchemaFetcher } from "./registry.ts"
 import { body, hasWireHeader, readSchemaId } from "./wire.ts"
@@ -11,7 +12,12 @@ async function decodeField(
   if (hasWireHeader(buf)) {
     const schemaId = readSchemaId(buf)
     const type = await typeForSchemaId(registry, schemaId)
-    return { value: type.fromBuffer(body(buf)), schemaId }
+    // Declared dates are lifted after avsc is done, never inside it (spec 031): a logical
+    // type registered with avsc would build its underlying long through avsc's own
+    // Number-based LongType, losing precision before the annotation was ever read.
+    const decoded = type.fromBuffer(body(buf))
+    const schema = await schemaJsonForId(registry, schemaId)
+    return { value: applyLogicalDates(schema, decoded), schemaId }
   }
   // Not Confluent-framed: try UTF-8 JSON, then plain UTF-8, else keep the raw buffer.
   // The JSON path is BigInt-safe (nfr/006) — a plain-JSON topic's int64 ids must not be

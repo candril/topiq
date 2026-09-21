@@ -130,7 +130,17 @@ export function stringifyEditable(value: unknown, indent: string = "  "): string
 }
 
 function editableLeaf(value: unknown): string {
-  return value instanceof Uint8Array ? JSON.stringify(hexLiteral(value)) : stringify(value)
+  if (value instanceof Uint8Array) {
+    return JSON.stringify(hexLiteral(value))
+  }
+  // A decoded `timestamp-millis` reads as a date everywhere else, but the editable buffer
+  // has to survive being parsed back (spec 031): digits round-trip through `coerceLong`
+  // unambiguously, while an ISO string would ask it to guess whether the field underneath
+  // is millis or micros — a silent factor of a thousand.
+  if (value instanceof Date) {
+    return String(value.getTime())
+  }
+  return stringify(value)
 }
 
 type LeafWriter = (value: unknown) => string

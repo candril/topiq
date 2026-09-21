@@ -92,6 +92,26 @@ describe("sortRows", () => {
   })
 })
 
+describe("declared date columns (spec 031)", () => {
+  const at = (iso: string): Date => new Date(iso)
+
+  test("dates order chronologically, not as one undifferentiated object group", () => {
+    const rows = [
+      row(1n, { PlacedAt: at("2026-09-21T08:42:32.905Z") }),
+      row(2n, { PlacedAt: at("2026-09-20T23:59:59.999Z") }),
+      row(3n, { PlacedAt: at("2026-09-21T09:00:00.000Z") }),
+    ]
+    expect(offsets(sortRows(rows, { path: "PlacedAt", direction: "asc" }))).toEqual([2, 1, 3])
+    expect(offsets(sortRows(rows, { path: "PlacedAt", direction: "desc" }))).toEqual([3, 1, 2])
+  })
+
+  test("equal instants keep the window's order", () => {
+    const same = "2026-09-21T08:42:32.905Z"
+    const rows = [row(1n, { PlacedAt: at(same) }), row(2n, { PlacedAt: at(same) })]
+    expect(offsets(sortRows(rows, { path: "PlacedAt", direction: "asc" }))).toEqual([1, 2])
+  })
+})
+
 describe("envelope columns (spec 024)", () => {
   const rows = [
     row(9007199254740995n, { Id: 1n }, { partition: 2, timestamp: new Date(3000) }),

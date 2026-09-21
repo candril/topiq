@@ -105,6 +105,13 @@ function join(path: string, segment: string): string {
 }
 
 function coerceLong(value: unknown): unknown {
+  // A Date is what a `timestamp-millis` field decoded to (spec 031). Every write path runs
+  // through here before validate(), so this one line is what keeps a copy, an edit and a
+  // craft encoding a message that carries a timestamp — the value states what it is, and
+  // nothing downstream has to know about logical types.
+  if (value instanceof Date) {
+    return BigInt(value.getTime())
+  }
   return typeof value === "number" && Number.isInteger(value) ? BigInt(value) : value
 }
 

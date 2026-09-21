@@ -88,7 +88,7 @@ for keys and values, against the cluster's registry, with a cache. This is where
   field decoded through avsc's own LongType (a `Number`, and a throw past 2^53) while every
   other long in the same message was a BigInt. Anything walking types by name —
   `coerce.ts`, `skeleton.ts` — then treated it as a BigInt long and rejected the value.
-  Dropping the logical annotation costs nothing: no logical types are registered, so avsc
+  Dropping the logical annotation costs avsc nothing: no logical types are registered, so it
   already ignores it and keeps the underlying type.
 
 - ~~**Can the BigInt `LongType` refuse to serialise?**~~ **Resolved: no.** `toJSON` threw

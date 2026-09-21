@@ -25,3 +25,12 @@ export function relativeAge(timestamp: Date, now: Date): string {
   const d = Math.floor(h / 24)
   return `${d}d ${h % 24}h ago`
 }
+
+/** The one timestamp rendering: ISO-8601, space instead of `T`, no zone suffix. Every time
+ *  topiq prints is UTC, so the trailing `Z` is noise that costs a column of width — the
+ *  surfaces with room to say so (the table header, the message document) say it in words.
+ *  Shared so a declared date field in the payload (spec 031) reads exactly like the
+ *  envelope's own timestamp beside it. */
+export function formatTimestamp(date: Date): string {
+  return date.toISOString().replace("T", " ").replace("Z", "")
+}

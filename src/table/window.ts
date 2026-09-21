@@ -1,4 +1,5 @@
 import type { FetchRange, PartitionStart } from "@/kafka/range.ts"
+import { formatTimestamp } from "@/time.ts"
 import type { DecodedMessage, PartitionMeta } from "@/types.ts"
 
 // Window shaping for the message table (specs 007/009): ordering, latest-N trimming and
@@ -42,10 +43,6 @@ export function trimLatestN(sorted: readonly DecodedMessage[], n: number): Decod
 
 /** UTC, second precision plus millis — Kafka timestamps are epoch millis, and hiding the
  *  millis makes same-second messages look identical. */
-export function formatTimestamp(date: Date): string {
-  return date.toISOString().replace("T", " ").replace("Z", "")
-}
-
 export function rangeSummary(range: FetchRange): string {
   switch (range.kind) {
     case "beginning":

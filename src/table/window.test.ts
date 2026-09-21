@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
+import { formatTimestamp } from "@/time.ts"
 import type { DecodedMessage } from "@/types.ts"
 import {
-  formatTimestamp,
   parseRangeInput,
   plannedCount,
   rangeSummary,

@@ -1,6 +1,5 @@
 import { stringifyPretty } from "@/render/json.ts"
-import { relativeAge } from "@/time.ts"
-import { formatTimestamp } from "@/table/window.ts"
+import { formatTimestamp, relativeAge } from "@/time.ts"
 import type { DecodedMessage } from "@/types.ts"
 
 // The message as an $EDITOR document (spec 008 as amended): Enter on a table row opens

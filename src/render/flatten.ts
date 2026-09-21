@@ -2,6 +2,7 @@
 // these across the loaded window; a path missing from a message's list is how "absent"
 // stays distinct from a present-but-null field (nfr/006).
 
+import { formatTimestamp } from "@/time.ts"
 import { isRecord, stringify, summarize } from "./json.ts"
 
 export interface FlatField {
@@ -43,5 +44,12 @@ function collect(
 // Arrays are never expanded into columns — element count varies per message, which would
 // reshuffle the column set mid-scroll (007 requires stable inference).
 function display(value: unknown): string {
+  // A declared date (spec 031) renders the way the envelope timestamp two columns to the
+  // left does. `stringify` would quote its ISO form, which is right for the JSON-shaped
+  // document views and wrong for a table cell — the quotes cost width and make one column
+  // of instants look unlike the other.
+  if (value instanceof Date) {
+    return formatTimestamp(value)
+  }
   return Array.isArray(value) || isRecord(value) ? summarize(value) : stringify(value)
 }
