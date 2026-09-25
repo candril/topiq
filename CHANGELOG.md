@@ -7,6 +7,8 @@ release, so write it before tagging.
 
 ## [Unreleased]
 
+## [0.4.1] — 2026-09-25
+
 ### Changed
 
 - OpenTUI 0.5.12, oxlint 1.85, oxfmt 0.70 and `undici-types` 8.11.2.
@@ -138,7 +140,9 @@ built and unit-tested but has not yet produced a byte to a real broker.
 - `TOPIQ_KAFKA_LOG=<path>` appends the Kafka client's debug log to a file, with anything
   token-shaped redacted.
 
-[Unreleased]: https://github.com/candril/topiq/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/candril/topiq/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/candril/topiq/compare/v0.4.0...v0.4.1
+[0.4.0]: https://github.com/candril/topiq/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/candril/topiq/compare/v0.2.0...v0.3.0
 [0.1.1]: https://github.com/candril/topiq/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/candril/topiq/releases/tag/v0.1.0

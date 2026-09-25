@@ -1,6 +1,6 @@
 {
   "name": "topiq",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Peek, filter, replay. Kafka without leaving the terminal.",
   "license": "MIT",
   "keywords": [
