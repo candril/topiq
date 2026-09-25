@@ -7,6 +7,10 @@ release, so write it before tagging.
 
 ## [Unreleased]
 
+### Changed
+
+- OpenTUI 0.5.12, oxlint 1.85, oxfmt 0.70 and `undici-types` 8.11.2.
+
 ## [0.4.0] - 2026-09-21
 
 ### Added
